@@ -3,7 +3,7 @@
 Ingyenes, magyar nyelvű webalkalmazás vadászoknak: egy rövid, irányított
 kérdőív (wizard) alapján ajánl kaliber- és lőszerkombinációkat, indoklással.
 
-> **Ez egy MVP, kutatott (v2) adatbázissal.** A kaliberlista és a
+> **Ez egy MVP, kutatott (v3) adatbázissal.** A kaliberlista és a
 > gyártói kereszthivatkozás valós kutatáson alapul, de a torkolatienergia-
 > tartományok **becsültek**, és a gyártói termékpélda-adatbázis szándékosan
 > **nem teljes lefedettségű**. Lásd az "Adatellenőrzési TODO" szakaszt éles
@@ -25,15 +25,16 @@ lehet megfelelő"), nem kategorikus ("ez a legjobb") — ez szándékos, lásd a
 
 - **Landing oldal** (`/`) — az öt magyar nagyvadfaj (gímszarvas, dámszarvas,
   őz, muflon, vaddisznó) saját, kézzel rajzolt jelvény-ikonjaival.
-- **Kérdőív** (`/wizard`) — 7 lépés: vadfaj, lőtávolság/terep, meglévő
-  kaliber (52 kaliber, kategóriánként csoportosítva), visszarúgás-érzékenység,
-  elsődleges cél, költségkeret, gyártói preferencia (13 márka).
+- **Kérdőív** (`/wizard`) — 7, egymástól valóban független lépés: vadfaj,
+  lőtávolság/terep, fegyvertípus (ismétlő / törőcsöves-kombinált / még nincs),
+  lövedék-viselkedési cél (+ólommentes szűrő), költségkeret, meglévő kaliber
+  (52 kaliber, kategóriánként csoportosítva), gyártói preferencia (13 márka).
 - **Eredményoldal** (`/eredmeny`) — a szabályalapú motor
-  (`lib/recommendation-engine.ts`) által talált **összes** releváns kaliber,
-  illeszkedési százalékkal, szöveges indoklással ("Miért ez a kaliber?"),
-  becsült torkolatienergia-tartománnyal (egyértelműen jelölve, hogy nem
-  hivatalos gyártói adat) és az elérhető gyártói termékpéldákkal — vagy egy
-  korrekt jelzéssel, ha egy kaliberhez még nincs ellenőrzött termékadatunk.
+  (`lib/recommendation-engine.ts`) által talált kaliberek közül a legfeljebb
+  **3 legelterjedtebb**, szöveges indoklással ("Miért ez a kaliber?"), becsült
+  torkolatienergia-tartománnyal (egyértelműen jelölve, hogy nem hivatalos
+  gyártói adat) és a hozzájuk tartozó lőszerekkel, lövedék-viselkedés és
+  ár-sáv szerint csoportosítva, ólommentesség jelölésével.
 - **Jogi figyelmeztetés** minden oldalon (`components/DisclaimerBanner.tsx`).
 
 ## Adatréteg (v2)
@@ -44,10 +45,26 @@ Mezők: `nev`, `lovedek_mm`, `tomeg_g` (jellemző lövedéktömeg-tartomány),
 `energia_j_becsult` (**becsült**, tájékozódási célú torkolatienergia-tartomány),
 `kategoria`, `elterjedtseg_hu` (1–5, Magyarországon), `megjegyzes`.
 
-A `kategoria` mező hét csoportot különböztet meg: `aprovad_roka`,
+A `kategoria` mező hét csoportot különböztet meg: `aprovad_ragadozo`,
 `univerzalis_kozepes`, `kozep_europai_klasszikus`, `nagyvad_europai`,
 `magnum_tavoli`, `afrikai_nagyvad`, `weatherby`. Ez a kutatásból átvett
 csoportosítás.
+
+**Fontos pontosítás:** az `aprovad_ragadozo` kategória **kizárólag golyós
+fegyverrel vadászott ragadozó/dúvad fajokra** vonatkozik (róka, aranysakál,
+borz, nyestkutya, mosómedve) — **NEM** a sörétes apróvad-listára (nyúl,
+fácán, fogoly, vízivad). Ez az alkalmazás kizárólag golyós kaliberekről szól,
+sörétes fegyverre/apróvadra nem ad ajánlást.
+
+### `data/lovedek_kategoriak.json` — lövedék-viselkedési kategóriák
+
+Három kategória (`kiegyensulyozott`, `gyors_hatas`, `melyathatolas_afrikai`),
+mindegyikhez leírás, jellemző lövedékkonstrukciók és példa-termékvonalak. A
+harmadik (`melyathatolas_afrikai`, nem expanzív szolid lövedék veszélyes
+afrikai nagyvadra) csak akkor jelenik meg választható opcióként a wizardban,
+ha a kiválasztott vadfajhoz afrikai nagyvad/Weatherby kategória is releváns
+lenne — a jelenlegi hazai vadfaj-listával ez sosem áll fenn, a kód viszont
+helyesen van bekötve, ha a fajlista bővülne.
 
 ### `data/manufacturer_products_seed.json` — 13 gyártó kereszthivatkozása
 
@@ -61,15 +78,31 @@ TODO-jelölt gyártó: Federal, Remington, Fiocchi, Blaser — ezekhez a kutatá
 nem talált hazai, kaliber-specifikus adatot, ezért nem generáltunk fiktív
 terméket hozzájuk).
 
+### `lib/ammo-classification.ts` — lövedék-viselkedés/ólommentesség/ár-sáv besorolás
+
+A seed sorok nem tartalmaznak lövedék-viselkedés, ólommentesség vagy ár-sáv
+mezőt. Ez a fájl a mi saját, a `data/lovedek_kategoriak.json` példa-
+termékvonalaival kereszthivatkozott besorolásunk (kulcs: `gyártó|termeknév`)
+— **nem egyedileg forrásolt**, hanem iparági termékpozicionálás alapján
+készült szakmai hozzárendelés (pl. a GECO márka egésze "value tier", a
+lead-free/bonded vonalak "prémium"). 25 sorból 21-hez van besorolás (a 4
+TODO-jelölt, terméknév nélküli sor kimarad). Ezt is érdemes egyedi
+forrásokkal (gyártói katalógus-pozicionálás) megerősíteni éles indulás előtt.
+
+Ugyanitt van az `isRimmedCaliber()` — egy explicit lista a peremes ("R")
+kaliberváltozatokról (5,6x52R, 6,5x57R, 7x57R, 7x65R, 8x57 IRS, 9,3x74R,
+.303 British), mert a névalak (pl. "IRS" vs "IS") nem old fel megbízhatóan
+egyszerű mintaillesztéssel.
+
 ### Vadfaj ↔ kategória megfeleltetés (a mi saját besorolásunk, nem kutatott adat)
 
-A wizard vadfaj-kérdése (gímszarvas/dámszarvas/őz/muflon/vaddisznó/apróvad/
-vegyes) és a `kategoria` mező összekötéséhez szükség volt egy saját
-megfeleltetésre — ez `lib/recommendation-engine.ts`-ben a
-`GAME_TO_KATEGORIA`, `KATEGORIA_RANGE_HINT` és `KATEGORIA_RECOIL_HINT`
-táblázatokban van, kódban (nem a JSON-ban, hogy a kutatott adatfájlok
-sémáját ne kelljen módosítani). Ez vadászati gyakorlatra épülő, szakmailag
-indokolt, de **nem forrásolt** besorolás — finomításra szorulhat.
+A wizard vadfaj-kérdése (gímszarvas/dámszarvas/őz/muflon/vaddisznó/
+ragadozó-dúvad/vegyes) és a `kategoria` mező összekötéséhez szükség volt egy
+saját megfeleltetésre — ez `lib/recommendation-engine.ts`-ben a
+`GAME_TO_KATEGORIA` és `KATEGORIA_RANGE_HINT` táblázatokban van, kódban (nem
+a JSON-ban, hogy a kutatott adatfájlok sémáját ne kelljen módosítani). Ez
+vadászati gyakorlatra épülő, szakmailag indokolt, de **nem forrásolt**
+besorolás — finomításra szorulhat.
 
 Az `afrikai_nagyvad` és `weatherby` kategóriák szándékosan nincsenek egyetlen
 hazai vadfajhoz sem rendelve (Magyarországon nem releváns veszélyesvad-
@@ -85,29 +118,43 @@ nem kellett módosítani.
 
 ## Ajánlási logika
 
-`lib/recommendation-engine.ts` — egyszerű, átlátható pontozás:
+`lib/recommendation-engine.ts` — egyszerű, átlátható pontozás, két lépésben:
+
+**1) Melyik kaliberek jöhetnek egyáltalán szóba (relevancia-küszöb):**
 
 1. **Kategória-egyezés** — kizáró jellegű szempont. Csak az adott vadfajra
    jellemzően használt kategóriába eső kaliberek kerülnek szóba (kivéve a
    felhasználó már meglévő kaliberét, azt mindig megmutatjuk).
 2. **Lőtávolság** — teljes vagy részleges egyezés (kategória-szintű becslés).
-3. **Meglévő kaliber** — ha van, erős pluszpontot kap.
-4. **Visszarúgás-tűrés** — kategória-szintű becslés alapján.
-5. **Elterjedtség Magyarországon** (`elterjedtseg_hu`) — a végső rendezésben
-   is szerepet kap: azonos illeszkedési arány esetén az elterjedtebb kaliber
-   kerül előrébb.
+3. **Fegyvertípus** — puha preferencia, nem kizárás: ismétlő fegyverhez a
+   rimless (nem peremes) kaliberváltozatok kapnak pluszpontot, törőcsöves/
+   kombinált fegyverhez a peremes ("R") változatok — de mindkét eset
+   megjeleníthető, csak egy magyarázó megjegyzéssel ("hüvelytoldatos/
+   adapteres megoldással tölthető").
+4. **Meglévő kaliber** — ha van, erős pluszpontot kap.
+5. **Elterjedtség Magyarországon** (`elterjedtseg_hu`) — enyhe súlyozás itt is.
 
-A küszöbérték felett **minden** találat megjelenik — nincs mesterséges "csak
-a legjobbat mutasd" korlátozás. Gyártói preferencia esetén a hozzá tartozó
-lőszerek kerülnek előre a listában.
+**2) Rendezés és vágás:** a küszöböt elérő kaliberek közül a végső sorrendet
+kizárólag az `elterjedtseg_hu` (csökkenő) adja — a meglévő kaliber mindig
+legelöl —, majd **legfeljebb 3 kaliber** kerül az eredményoldalra. Ez
+szándékos leegyszerűsítés: kevesebb, de a felhasználó számára ténylegesen
+releváns kaliber, cserébe minden megjelenő kaliberhez a teljes elérhető
+lőszerkínálat látszik (lásd lent).
 
-**Fontos, átlátható egyszerűsítés:** az "elsődleges cél" (pontosság / ár /
-hatékony terítés) és a "költségkeret" válaszok jelenleg csak tájékoztató
-jelleggel jelennek meg az eredményoldalon — **nem** befolyásolják
-algoritmikusan a lőszerválasztást, mert a seed adatbázis (szándékosan) nem
-tartalmaz ár- vagy felhasználásicél-adatot egyetlen termékhez sem, és nem
-akartunk ilyet kitalálni. Ha bővül a termékadatbázis ár/cél mezőkkel, ez a
-logika visszaépíthető.
+**Lőszerkínálat a top 3 kaliberhez:** minden megjelenő kaliberhez az ÖSSZES
+illeszkedő, ellenőrzött termékpélda megjelenik, csoportosítva: előbb a
+felhasználó által választott lövedék-viselkedési kategória (kiegyensúlyozott
+/ gyors hatás), utána a másik kategória mint alternatíva; mindegyiken belül
+ár-sáv szerint (érték / prémium), és minden tétel jelölve, ha ólommentes. Ha
+az "ólommentes lőszert keresek" szűrő aktív, csak ólommentes tételek
+jelennek meg. Ha egy kategóriában nincs (elég) találat, korrekt jelzés
+jelenik meg fiktív termék generálása helyett.
+
+**Fontos, átlátható egyszerűsítés:** a "költségkeret" válasz jelenleg csak
+tájékoztató jelleggel jelenik meg az eredményoldalon (a lőszerkínálat
+ár-sáv szerinti csoportosítása a termék saját, kód-oldali besorolásán
+alapul, nem a felhasználó személyes költségkeret-válaszán) — ezt a két
+fogalmat szándékosan nem kevertük össze.
 
 ## ⚠️ Adatellenőrzési TODO éles indulás előtt
 
@@ -137,6 +184,20 @@ logika visszaépíthető.
 - [ ] Ne állíts konkrét jogszabályi minimumkövetelményt (torkolati energia
       vadfajonként) tényként ellenőrzés nélkül — ezt a hatályos magyar
       vadászati jogszabályokból kell lekérdezni.
+- [ ] A `lib/ammo-classification.ts`-ben lévő lövedék-viselkedés/ólommentesség/
+      ár-sáv besorolás iparági termékpozicionálás alapján készült, nem
+      egyedi gyártói forrásból — érdemes minden tételt egyenként
+      megerősíteni (különösen az ár-sáv "érték"/"prémium" besorolást).
+
+### Miért nincs "visszarúgás-érzékenység" és "elsődleges cél" kérdés?
+
+A korábbi verzió tartalmazott egy "elsődleges cél" (pontosság / ár / gyors
+terítés) és egy "visszarúgás-érzékenység" kérdést. Ezeket szándékosan
+kivettük: a pontosság nem választható cél (a helyes lövedékválasztás és a
+fegyverben való kipróbálás eredménye, nem egy trade-off a stop-hatás
+rovására), a visszarúgás pedig átfedésben volt az új, pontosabb
+fegyvertípus/lövedék-viselkedés kérdésekkel. A jelenlegi 7 kérdés
+egymástól valóban független szempontokat mér.
 
 ### Gyártói háttér (kontextus, nem befolyásolja a kódot)
 
@@ -175,9 +236,11 @@ npm run build
 /data
   calibers.json                    → 52 kaliber, kutatott adatok
   manufacturer_products_seed.json  → 13 gyártó kereszthivatkozása (seed)
+  lovedek_kategoriak.json          → 3 lövedék-viselkedési kategória
 /lib
   types.ts
   data.ts                 → betöltés + kaliber-név feloldás (aliasok)
+  ammo-classification.ts  → lövedék-viselkedés/ólommentesség/ár-sáv besorolás + isRimmedCaliber()
   recommendation-engine.ts
   wizard-questions.ts
 /components
@@ -193,8 +256,8 @@ npm run build
   szabályalapú pontozás.
 - Nincs fizetős/affiliate link. Ha a jövőben bármely gyártóval kereskedelmi
   kapcsolat (affiliate, szponzoráció) létesül, azt egyértelműen jelölni kell.
-- Nincs algoritmikus ár/cél-alapú lőszerszűrés (lásd fent, "Fontos, átlátható
-  egyszerűsítés").
+- A személyes költségkeret-válasz nem szűri algoritmikusan a lőszerlistát
+  (lásd fent, "Fontos, átlátható egyszerűsítés").
 - Nincs PDF-export vagy megosztható link (az `/eredmeny` oldal jelenleg
   query paraméterekben tárolja a válaszokat, így az URL már most
   megosztható).
