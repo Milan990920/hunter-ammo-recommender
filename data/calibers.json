@@ -1,0 +1,102 @@
+[
+  {
+    "id": "223-rem",
+    "name": ".223 Remington",
+    "targetGame": ["aprovad"],
+    "rangeCategories": ["kozeli", "kozepes"],
+    "muzzleEnergyRangeJ": [1300, 1800],
+    "recoilLevel": "alacsony",
+    "popularityHU": 3,
+    "description": "Könnyű, kis visszarúgású kaliber apróvadra és ragadozókra. Nagyvadra sok magyar vadászterületen jogszabályi/etikai okból nem elegendő — mindig ellenőrizd a helyi előírást."
+  },
+  {
+    "id": "243-win",
+    "name": ".243 Winchester",
+    "targetGame": ["oz"],
+    "rangeCategories": ["kozeli", "kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [2000, 2600],
+    "recoilLevel": "alacsony",
+    "popularityHU": 3,
+    "description": "Kifejezetten kedvelt őzre: pontos, lapos röppályájú, kellemesen kis visszarúgású kaliber kezdőknek és érzékenyebb testalkatúaknak is."
+  },
+  {
+    "id": "65x55",
+    "name": "6.5x55 SE (Swedish Mauser)",
+    "targetGame": ["oz", "damszarvas"],
+    "rangeCategories": ["kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [2800, 3400],
+    "recoilLevel": "kozepes",
+    "popularityHU": 4,
+    "description": "Klasszikus skandináv kaliber, kiegyensúlyozott teljesítmény őzre és dámra, közepes-nagy távolságból is megbízható."
+  },
+  {
+    "id": "65-creedmoor",
+    "name": "6.5 Creedmoor",
+    "targetGame": ["oz", "damszarvas", "muflon"],
+    "rangeCategories": ["kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [2900, 3500],
+    "recoilLevel": "kozepes",
+    "popularityHU": 3,
+    "description": "Modern, egyre terjedő kaliber; kiváló pontosság és lapos röppálya nagy távolságból leadott lövésekhez, mérsékelt visszarúgással."
+  },
+  {
+    "id": "270-win",
+    "name": ".270 Winchester",
+    "targetGame": ["gimszarvas", "damszarvas"],
+    "rangeCategories": ["kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [3200, 3800],
+    "recoilLevel": "kozepes",
+    "popularityHU": 3,
+    "description": "Nagy sebességű, lapos röppályájú kaliber közepes-nagy testű szarvasfélékre, nyílt terepi, hosszabb lövésekhez."
+  },
+  {
+    "id": "7x64",
+    "name": "7x64 Brenneke",
+    "targetGame": ["gimszarvas", "vaddiszno", "damszarvas"],
+    "rangeCategories": ["kozeli", "kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [3300, 3900],
+    "recoilLevel": "kozepes",
+    "popularityHU": 5,
+    "description": "Az egyik legnépszerűbb, sokoldalú európai nagyvadkaliber — jó kompromisszum minden jellemző magyarországi vadfajra és terepre."
+  },
+  {
+    "id": "308-win",
+    "name": ".308 Winchester",
+    "targetGame": ["vaddiszno", "gimszarvas"],
+    "rangeCategories": ["kozeli", "kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [3400, 4000],
+    "recoilLevel": "kozepes",
+    "popularityHU": 5,
+    "description": "Rendkívül elterjedt, sokoldalú kaliber; széles lőszerválaszték, jó egyensúly teljesítmény és kezelhető visszarúgás között."
+  },
+  {
+    "id": "30-06",
+    "name": ".30-06 Springfield",
+    "targetGame": ["gimszarvas", "vaddiszno", "damszarvas"],
+    "rangeCategories": ["kozeli", "kozepes", "nagy"],
+    "muzzleEnergyRangeJ": [3600, 4300],
+    "recoilLevel": "kozepes",
+    "popularityHU": 5,
+    "description": "Klasszikus, univerzális nagyvadkaliber, minden hazai vadfajra és lőtávolságra kínál megfelelő lőszertípust."
+  },
+  {
+    "id": "8x57is",
+    "name": "8x57 IS",
+    "targetGame": ["vaddiszno", "gimszarvas"],
+    "rangeCategories": ["kozeli", "kozepes"],
+    "muzzleEnergyRangeJ": [3800, 4400],
+    "recoilLevel": "magas",
+    "popularityHU": 3,
+    "description": "Hagyományos, nagy leütőerejű német kaliber, elsősorban közeli-közepes távolságú vaddisznó- és szarvasvadászatra."
+  },
+  {
+    "id": "93x62",
+    "name": "9.3x62",
+    "targetGame": ["vaddiszno", "gimszarvas"],
+    "rangeCategories": ["kozeli", "kozepes"],
+    "muzzleEnergyRangeJ": [4500, 5200],
+    "recoilLevel": "magas",
+    "popularityHU": 4,
+    "description": "Klasszikus hajtóvadász-kaliber nagy leütőerővel, sűrű erdei, közeli távolságú vaddisznó- és nagyvadvadászatra."
+  }
+]
