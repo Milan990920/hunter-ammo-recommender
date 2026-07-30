@@ -1,9 +1,16 @@
 import calibersData from "@/data/calibers.json";
 import ammoSeedData from "@/data/manufacturer_products_seed.json";
-import type { AmmoSeedEntry, Caliber } from "@/lib/types";
+import lovedekKategoriakData from "@/data/lovedek_kategoriak.json";
+import { enrichAmmo } from "@/lib/ammo-classification";
+import type { AmmoSeedEntry, Caliber, EnrichedAmmo, LovedekKategoria, LovedekKategoriaId } from "@/lib/types";
 
 export const CALIBERS: Caliber[] = calibersData as Caliber[];
 export const AMMO_SEED: AmmoSeedEntry[] = ammoSeedData as AmmoSeedEntry[];
+export const LOVEDEK_KATEGORIAK: LovedekKategoria[] = lovedekKategoriakData as LovedekKategoria[];
+
+export function getLovedekKategoria(id: LovedekKategoriaId): LovedekKategoria | undefined {
+  return LOVEDEK_KATEGORIAK.find((k) => k.id === id);
+}
 
 /**
  * A gyártói seed adatbázisban a kaliber-hivatkozások néhol eltérő írásmóddal
@@ -49,4 +56,11 @@ export function getAmmoSeedForCaliber(caliberNev: string): AmmoSeedEntry[] {
       .map((part) => resolveCaliberName(part))
       .includes(caliberNev);
   });
+}
+
+/** Ugyanaz, de lövedék-kategória/ólommentesség/ár-sáv besorolással kiegészítve. */
+export function getEnrichedAmmoForCaliber(caliberNev: string): EnrichedAmmo[] {
+  return getAmmoSeedForCaliber(caliberNev)
+    .map(enrichAmmo)
+    .filter((a): a is EnrichedAmmo => a !== null);
 }
