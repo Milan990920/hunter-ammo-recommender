@@ -1,20 +1,14 @@
 import Link from "next/link";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import ResultCard from "@/components/ResultCard";
-import { getCaliberByNev } from "@/lib/data";
+import { getCaliberByNev, getLovedekKategoria } from "@/lib/data";
 import { generateRecommendations } from "@/lib/recommendation-engine";
-import {
-  BUDGET_OPTIONS,
-  GAME_OPTIONS,
-  GOAL_OPTIONS,
-  RANGE_OPTIONS,
-  RECOIL_OPTIONS,
-} from "@/lib/wizard-questions";
+import { BUDGET_OPTIONS, FEGYVERTIPUS_OPTIONS, GAME_OPTIONS, RANGE_OPTIONS } from "@/lib/wizard-questions";
 import type {
   BudgetLevel,
-  Goal,
+  FegyverTipus,
+  LovedekKategoriaId,
   RangeCategory,
-  RecoilLevel,
   WizardAnswers,
 } from "@/lib/types";
 
@@ -29,23 +23,25 @@ function parseAnswers(sp: SearchParams): WizardAnswers | null {
 
   const game = get("game");
   const range = get("range") as RangeCategory | undefined;
-  const existingCaliberId = get("existingCaliberId");
-  const recoilSensitivity = get("recoilSensitivity") as RecoilLevel | "nem_szamit" | undefined;
-  const goal = get("goal") as Goal | undefined;
+  const fegyvertipus = get("fegyvertipus") as FegyverTipus | undefined;
+  const lovedekKategoria = get("lovedekKategoria") as LovedekKategoriaId | undefined;
+  const olommentesSzukseges = get("olommentesSzukseges") === "true";
   const budget = get("budget") as BudgetLevel | undefined;
+  const existingCaliberId = get("existingCaliberId");
   const manufacturers = get("manufacturers") ?? "";
 
-  if (!game || !range || !existingCaliberId || !recoilSensitivity || !goal || !budget) {
+  if (!game || !range || !fegyvertipus || !lovedekKategoria || !budget || !existingCaliberId) {
     return null;
   }
 
   return {
     game: game as WizardAnswers["game"],
     range,
-    existingCaliberId,
-    recoilSensitivity,
-    goal,
+    fegyvertipus,
+    lovedekKategoria,
+    olommentesSzukseges,
     budget,
+    existingCaliberId,
     preferredManufacturers: manufacturers.split(",").filter(Boolean),
   };
 }
@@ -81,6 +77,7 @@ export default async function ResultPage({
   const { recommendations, fallbackUsed } = generateRecommendations(answers);
   const existingCaliber =
     answers.existingCaliberId !== "nincs" ? getCaliberByNev(answers.existingCaliberId) : undefined;
+  const lovedekKategoria = getLovedekKategoria(answers.lovedekKategoria);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -99,11 +96,16 @@ export default async function ResultPage({
           Táv: {findLabel(RANGE_OPTIONS, answers.range)}
         </span>
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
-          Visszarúgás: {findLabel(RECOIL_OPTIONS, answers.recoilSensitivity)}
+          Fegyver: {findLabel(FEGYVERTIPUS_OPTIONS, answers.fegyvertipus)}
         </span>
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
-          Cél: {findLabel(GOAL_OPTIONS, answers.goal)}
+          Lövedék: {lovedekKategoria?.megjelenites ?? answers.lovedekKategoria}
         </span>
+        {answers.olommentesSzukseges && (
+          <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+            Ólommentes lőszer szükséges
+          </span>
+        )}
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
           Költségkeret: {findLabel(BUDGET_OPTIONS, answers.budget)}
         </span>
@@ -124,7 +126,13 @@ export default async function ResultPage({
 
       <div className="mt-8 space-y-6">
         {recommendations.map((rec, i) => (
-          <ResultCard key={rec.caliber.nev} recommendation={rec} rank={i + 1} game={answers.game} />
+          <ResultCard
+            key={rec.caliber.nev}
+            recommendation={rec}
+            rank={i + 1}
+            game={answers.game}
+            preferredLovedekKategoria={answers.lovedekKategoria}
+          />
         ))}
       </div>
 

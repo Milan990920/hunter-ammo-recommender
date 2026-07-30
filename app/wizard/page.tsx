@@ -5,24 +5,23 @@ import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import OptionCard from "@/components/OptionCard";
 import { GAME_ICONS, type GameIconKey } from "@/components/icons/GameIcons";
-import { CALIBERS } from "@/lib/data";
-import { KATEGORIA_LABELS } from "@/lib/recommendation-engine";
+import { CALIBERS, LOVEDEK_KATEGORIAK } from "@/lib/data";
+import { KATEGORIA_LABELS, relevantKategoriak } from "@/lib/recommendation-engine";
 import {
   BUDGET_OPTIONS,
+  FEGYVERTIPUS_OPTIONS,
   GAME_OPTIONS,
-  GOAL_OPTIONS,
   MANUFACTURER_OPTIONS,
   NO_MANUFACTURER_PREFERENCE,
   RANGE_OPTIONS,
-  RECOIL_OPTIONS,
   WIZARD_STEP_TITLES,
 } from "@/lib/wizard-questions";
 import type {
   BudgetLevel,
-  Goal,
+  FegyverTipus,
   Kategoria,
+  LovedekKategoriaId,
   RangeCategory,
-  RecoilLevel,
   WizardAnswers,
 } from "@/lib/types";
 
@@ -31,6 +30,12 @@ const CALIBERS_BY_KATEGORIA = (Object.keys(KATEGORIA_LABELS) as Kategoria[]).map
   label: KATEGORIA_LABELS[kategoria],
   calibers: CALIBERS.filter((c) => c.kategoria === kategoria),
 }));
+
+// A "mély átütés / afrikai szolid" lövedék-kategória csak akkor releváns, ha a
+// kiválasztott vadfaj kategóriája afrikai nagyvad/Weatherby — a jelenlegi
+// hazai vadfaj-listával ez sosem áll fenn, de a kód erre az esetre is fel van
+// készítve, ha a jövőben bővül a fajlista.
+const AFRIKAI_RELEVANS_KATEGORIAK: Kategoria[] = ["afrikai_nagyvad", "weatherby"];
 
 const TOTAL_STEPS = WIZARD_STEP_TITLES.length;
 
@@ -41,7 +46,21 @@ export default function WizardPage() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<PartialAnswers>({
     preferredManufacturers: [],
+    olommentesSzukseges: false,
   });
+
+  // Csak akkor mutassuk a "mély átütés / afrikai" opciót, ha a kiválasztott
+  // vadfajhoz ténylegesen afrikai nagyvad/Weatherby kategória is releváns —
+  // a jelenlegi GAME_TO_KATEGORIA leképezésben ez sosem fordul elő, de a kód
+  // helyesen van bekötve, ha a fajlista a jövőben bővülne.
+  const showAfrikaiOption = useMemo(() => {
+    if (!answers.game) return false;
+    return relevantKategoriak(answers.game).some((k) => AFRIKAI_RELEVANS_KATEGORIAK.includes(k));
+  }, [answers.game]);
+
+  const lovedekOptions = LOVEDEK_KATEGORIAK.filter(
+    (k) => k.id !== "melyathatolas_afrikai" || showAfrikaiOption,
+  );
 
   const isStepComplete = useMemo(() => {
     switch (step) {
@@ -50,13 +69,13 @@ export default function WizardPage() {
       case 1:
         return Boolean(answers.range);
       case 2:
-        return Boolean(answers.existingCaliberId);
+        return Boolean(answers.fegyvertipus);
       case 3:
-        return Boolean(answers.recoilSensitivity);
+        return Boolean(answers.lovedekKategoria);
       case 4:
-        return Boolean(answers.goal);
-      case 5:
         return Boolean(answers.budget);
+      case 5:
+        return Boolean(answers.existingCaliberId);
       case 6:
         return true;
       default:
@@ -73,10 +92,11 @@ export default function WizardPage() {
     const params = new URLSearchParams({
       game: finalAnswers.game,
       range: finalAnswers.range,
-      existingCaliberId: finalAnswers.existingCaliberId,
-      recoilSensitivity: finalAnswers.recoilSensitivity,
-      goal: finalAnswers.goal,
+      fegyvertipus: finalAnswers.fegyvertipus,
+      lovedekKategoria: finalAnswers.lovedekKategoria,
+      olommentesSzukseges: String(Boolean(finalAnswers.olommentesSzukseges)),
       budget: finalAnswers.budget,
+      existingCaliberId: finalAnswers.existingCaliberId,
       manufacturers: finalAnswers.preferredManufacturers.join(","),
     });
     router.push(`/eredmeny?${params.toString()}`);
@@ -143,6 +163,86 @@ export default function WizardPage() {
         )}
 
         {step === 2 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {FEGYVERTIPUS_OPTIONS.map((opt) => (
+              <OptionCard
+                key={opt.id}
+                label={opt.label}
+                hint={opt.hint}
+                selected={answers.fegyvertipus === opt.id}
+                onClick={() =>
+                  setAnswers((prev) => ({ ...prev, fegyvertipus: opt.id as FegyverTipus }))
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {lovedekOptions.map((opt) => (
+                <OptionCard
+                  key={opt.id}
+                  label={opt.megjelenites}
+                  hint={opt.leiras}
+                  selected={answers.lovedekKategoria === opt.id}
+                  onClick={() =>
+                    setAnswers((prev) => ({
+                      ...prev,
+                      lovedekKategoria: opt.id as LovedekKategoriaId,
+                    }))
+                  }
+                />
+              ))}
+            </div>
+            <p className="mt-4 text-xs text-forest-700/80">
+              A pontos lövés helye mindig a legfontosabb tényező a gyors, tiszta terítésben —
+              ezt a lövedék típusa nem helyettesíti, csak kiegészíti. Az alábbi választás azt
+              befolyásolja, hogyan viselkedik a lövedék a vad testében becsapódás után.
+            </p>
+
+            <div className="mt-6 rounded-2xl border-2 border-dashed border-forest-900/15 bg-tan-50 p-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-forest-700">
+                További szűrő
+              </p>
+              <label className="flex cursor-pointer items-center gap-3">
+                <input
+                  type="checkbox"
+                  checked={Boolean(answers.olommentesSzukseges)}
+                  onChange={(e) =>
+                    setAnswers((prev) => ({ ...prev, olommentesSzukseges: e.target.checked }))
+                  }
+                  className="h-5 w-5 rounded border-forest-900/30 text-forest-700 focus:ring-forest-600"
+                />
+                <span className="font-medium text-forest-950">Ólommentes lőszert keresek</span>
+              </label>
+              <p className="mt-2 text-xs text-forest-700/80">
+                Egyes vadászterületeken és élőhelyeken (pl. vizes élőhelyek közelében) az EU
+                szabályozása korlátozza az ólomsörét/ólomlövedék használatát — érdemes
+                tájékozódni a helyi előírásokról.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {BUDGET_OPTIONS.map((opt) => (
+              <OptionCard
+                key={opt.id}
+                label={opt.label}
+                hint={opt.hint}
+                selected={answers.budget === opt.id}
+                onClick={() =>
+                  setAnswers((prev) => ({ ...prev, budget: opt.id as BudgetLevel }))
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="space-y-4">
             <OptionCard
               label="Még nincs fegyverem"
@@ -179,55 +279,6 @@ export default function WizardPage() {
                 ))}
               </select>
             </div>
-          </div>
-        )}
-
-        {step === 3 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {RECOIL_OPTIONS.map((opt) => (
-              <OptionCard
-                key={opt.id}
-                label={opt.label}
-                hint={opt.hint}
-                selected={answers.recoilSensitivity === opt.id}
-                onClick={() =>
-                  setAnswers((prev) => ({
-                    ...prev,
-                    recoilSensitivity: opt.id as RecoilLevel | "nem_szamit",
-                  }))
-                }
-              />
-            ))}
-          </div>
-        )}
-
-        {step === 4 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {GOAL_OPTIONS.map((opt) => (
-              <OptionCard
-                key={opt.id}
-                label={opt.label}
-                hint={opt.hint}
-                selected={answers.goal === opt.id}
-                onClick={() => setAnswers((prev) => ({ ...prev, goal: opt.id as Goal }))}
-              />
-            ))}
-          </div>
-        )}
-
-        {step === 5 && (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {BUDGET_OPTIONS.map((opt) => (
-              <OptionCard
-                key={opt.id}
-                label={opt.label}
-                hint={opt.hint}
-                selected={answers.budget === opt.id}
-                onClick={() =>
-                  setAnswers((prev) => ({ ...prev, budget: opt.id as BudgetLevel }))
-                }
-              />
-            ))}
           </div>
         )}
 
