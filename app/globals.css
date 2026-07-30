@@ -1,0 +1,53 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7f4ee;
+  --foreground: #1f2a20;
+
+  --color-forest-950: #10201a;
+  --color-forest-900: #16302a;
+  --color-forest-800: #1f4238;
+  --color-forest-700: #2a5548;
+  --color-forest-600: #35695a;
+  --color-forest-500: #457f6c;
+
+  --color-tan-50: #faf7f0;
+  --color-tan-100: #f2ead9;
+  --color-tan-200: #e5d6b8;
+  --color-tan-300: #d3bb8b;
+
+  --color-ember-500: #b5762c;
+  --color-ember-600: #9a611f;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-fraunces);
+
+  --color-forest-950: var(--color-forest-950);
+  --color-forest-900: var(--color-forest-900);
+  --color-forest-800: var(--color-forest-800);
+  --color-forest-700: var(--color-forest-700);
+  --color-forest-600: var(--color-forest-600);
+  --color-forest-500: var(--color-forest-500);
+
+  --color-tan-50: var(--color-tan-50);
+  --color-tan-100: var(--color-tan-100);
+  --color-tan-200: var(--color-tan-200);
+  --color-tan-300: var(--color-tan-300);
+
+  --color-ember-500: var(--color-ember-500);
+  --color-ember-600: var(--color-ember-600);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.bg-noise {
+  background-image: radial-gradient(circle at 1px 1px, rgba(16, 32, 26, 0.06) 1px, transparent 0);
+  background-size: 18px 18px;
+}
