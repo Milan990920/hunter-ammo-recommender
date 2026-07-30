@@ -1,0 +1,36 @@
+[
+  {
+    "id": "kiegyensulyozott",
+    "megjelenites": "Kiegyensúlyozott hatás — jó terítés, kímélt vadhús",
+    "leiras": "Tömegtartó expanzív lövedék: kontrolláltan nyílik, jó stop-hatást ad, miközben viszonylag kevés vadhúst roncsol. Ez az alapértelmezett, legszélesebb körben ajánlott kategória a legtöbb nagyvad (őz, vaddisznó, gímszarvas, dám, muflon) esetén.",
+    "lovedek_konstrukciok": ["bonded (kötött magú)", "kontrollált expanziójú monolit réz"],
+    "pelda_termekvonalak": [
+      "Norma Oryx", "Sako Hammerhead / Super Hammerhead", "RWS ID Classic / DK",
+      "Hornady InterLock / Precision Hunter ELD-X", "Brenneke TUG / TIG",
+      "Federal Fusion / Terminal Ascent", "Sellier & Bellot SPCE",
+      "RWS HIT / EVO Green (ólommentes)", "Norma Ecostrike / Evostrike (ólommentes)",
+      "GECO Star / Zero (ólommentes)", "Lapua Naturalis (ólommentes)",
+      "Blaser CDC / CDX (ólommentes)", "SAX KJG (ólommentes)", "Sako Powerhead Blade (ólommentes)"
+    ],
+    "ajanlott_ha": ["vadfaj = őz, vaddisznó, gímszarvas, dám, muflon, nagyvad_europai", "cél = trófea- és húshasznosítás egyaránt fontos"]
+  },
+  {
+    "id": "gyors_hatas",
+    "megjelenites": "Gyors, azonnali hatás — a vadhús-/prém-kímélés másodlagos",
+    "leiras": "Részben széteső expanzív lövedék: gyors, drámai energialeadás, kimagasló stop-hatás, de nagyobb vadhúsroncsolással jár. Elsősorban ragadozó/dúvad-szabályozásnál (róka, aranysakál, borz, nyestkutya, mosómedve) ajánlott, ahol a cél a gyors, humánus elejtés, és a hús/prém értéke másodlagos.",
+    "lovedek_konstrukciok": ["hagyományos, vékony köpenyű lágyhegyű (SP)", "gyors expanziós hegyes/kúpos lövedék"],
+    "pelda_termekvonalak": [
+      "GECO Express", "RWS KS / TMS", "Sellier & Bellot SP",
+      "Hornady V-Max / SST (kisebb kaliberekben)", "Norma Tipstrike"
+    ],
+    "ajanlott_ha": ["vadfaj = aprovad_ragadozo", "cél = gyors elejtés, hús/prém-kímélés nem elsődleges"]
+  },
+  {
+    "id": "melyathatolas_afrikai",
+    "megjelenites": "Mély, egyenes átütés — veszélyes afrikai nagyvadra (niche eset)",
+    "leiras": "Tömeg- és formatartó, nem expanzív szolid lövedék. Csak veszélyes afrikai nagyvad (elefánt, bivaly) elleni, kiegészítő második lövedékként releváns — hazai vadászatban gyakorlatilag nem használt kategória. Csak akkor ajánld fel választható opcióként, ha a felhasználó kifejezetten afrikai nagyvad- vagy Weatherby-kategóriát választott.",
+    "lovedek_konstrukciok": ["acél köpenyes szolid (FMJ-szerű, nem expanzív)"],
+    "pelda_termekvonalak": ["Norma African PH Woodleigh szolidok", "Federal Premium Safari Cape-Shok szolidok", "Hornady Dangerous Game Series szolidok"],
+    "ajanlott_ha": ["vadfaj = afrikai_nagyvad, és a felhasználó kifejezetten jelzi, hogy veszélyes vadra készül"]
+  }
+]

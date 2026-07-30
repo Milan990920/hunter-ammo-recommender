@@ -4,18 +4,38 @@ export type GameType = GameIconKey;
 
 export type RangeCategory = "kozeli" | "kozepes" | "nagy";
 
-export type RecoilLevel = "alacsony" | "kozepes" | "magas";
-
 export type BudgetLevel = "alacsony" | "kozepes" | "magas";
 
-export type Goal = "pontossag" | "ar" | "hatekonysag";
+/** Milyen fegyverrel vadászik — eldönti, hogy a peremes ("R") kaliberváltozatok élveznek-e előnyt. */
+export type FegyverTipus = "ismetlo" | "toroecsoeves_kombinalt" | "nyitott";
+
+/** A data/lovedek_kategoriak.json azonosítói. */
+export type LovedekKategoriaId = "kiegyensulyozott" | "gyors_hatas" | "melyathatolas_afrikai";
+
+/** Egy lövedék-viselkedési kategória a data/lovedek_kategoriak.json fájlból. */
+export interface LovedekKategoria {
+  id: LovedekKategoriaId;
+  megjelenites: string;
+  leiras: string;
+  lovedek_konstrukciok: string[];
+  pelda_termekvonalak: string[];
+  ajanlott_ha: string[];
+}
+
+/** Termék ár-sávja (a lövedék-kiválasztás csoportosításához). */
+export type ArSav = "ertek" | "premium";
 
 /**
  * A kutatott kaliberadatbázis kategóriái (lásd data/calibers.json). Ez a
  * kutatásból átvett, tényleges csoportosítás — nem mi találtuk ki.
+ *
+ * `aprovad_ragadozo`: KIZÁRÓLAG golyós fegyverrel vadászott ragadozó/dúvad
+ * fajokra vonatkozik (róka, aranysakál, borz, nyestkutya, mosómedve) — NEM a
+ * sörétes apróvad-listára (nyúl, fácán, fogoly, vízivad), azokra ez az
+ * alkalmazás nem ad ajánlást.
  */
 export type Kategoria =
-  | "aprovad_roka"
+  | "aprovad_ragadozo"
   | "univerzalis_kozepes"
   | "kozep_europai_klasszikus"
   | "nagyvad_europai"
@@ -52,14 +72,25 @@ export interface AmmoSeedEntry {
   TODO_ellenorzendo?: boolean;
 }
 
+/**
+ * Egy AmmoSeedEntry, kiegészítve a mi saját (nem forrásolt, lásd README)
+ * lövedék-kategória / ólommentesség / ár-sáv besorolásunkkal.
+ */
+export interface EnrichedAmmo extends AmmoSeedEntry {
+  lovedekKategoria: LovedekKategoriaId;
+  olommentes: boolean;
+  arSav: ArSav;
+}
+
 export interface WizardAnswers {
   game: GameType;
   range: RangeCategory;
+  fegyvertipus: FegyverTipus;
+  lovedekKategoria: LovedekKategoriaId;
+  olommentesSzukseges: boolean;
+  budget: BudgetLevel;
   /** Egy Caliber.nev érték, vagy "nincs" ha nincs még fegyvere. */
   existingCaliberId: string;
-  recoilSensitivity: RecoilLevel | "nem_szamit";
-  goal: Goal;
-  budget: BudgetLevel;
   preferredManufacturers: string[];
 }
 
@@ -75,5 +106,5 @@ export interface ScoredCaliber {
 }
 
 export interface CaliberRecommendation extends ScoredCaliber {
-  ammoOptions: AmmoSeedEntry[];
+  ammoOptions: EnrichedAmmo[];
 }
