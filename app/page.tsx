@@ -7,7 +7,9 @@ import {
   WildBoarIcon,
 } from "@/components/icons/GameIcons";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
-import { AMMO, CALIBERS } from "@/lib/data";
+import { AMMO_SEED, CALIBERS } from "@/lib/data";
+
+const MANUFACTURER_COUNT = 13;
 
 const BIG_FIVE = [
   { Icon: RedDeerIcon, label: "Gímszarvas" },
@@ -34,19 +36,19 @@ export default function Home() {
           </div>
 
           <h1 className="text-balance text-center font-display text-3xl font-semibold sm:text-5xl">
-            Találja meg az Önnek való kalibert és lőszert
+            Válassza ki a vadászati céljához illő kalibert és lőszert
           </h1>
           <p className="mx-auto mt-4 max-w-xl text-balance text-center text-tan-100/85">
-            Néhány kérdés a hazai öt nagyvadfajról, a terepről és a
-            preferenciáiról — mi pedig indoklással ellátott kaliber- és
-            lőszerajánlást adunk, nem csak egyetlen &bdquo;legjobb&rdquo; választ.
+            Az ajánlás mérhető ballisztikai és gyakorlati szempontok alapján készül. Az
+            eredmény tájékoztató jellegű, és nem helyettesíti a hatályos jogszabályok
+            ismeretét, illetve a fegyverkereskedő vagy vadásztárs szakmai tanácsát.
           </p>
           <div className="mt-8 flex justify-center">
             <Link
               href="/wizard"
               className="rounded-full bg-ember-500 px-8 py-3.5 text-base font-semibold text-forest-950 shadow-lg shadow-ember-600/20 transition hover:bg-ember-600 hover:text-tan-50"
             >
-              Kérdőív indítása →
+              Ajánlás kérése →
             </Link>
           </div>
         </div>
@@ -59,12 +61,12 @@ export default function Home() {
             body="7 lépés, kb. 2 perc — a vadfaj, a terep és a preferenciái alapján."
           />
           <FeatureCard
-            title="Nem csak egy válasz"
-            body={`Ha több kaliber is illeszkedik, mindegyiket megmutatjuk — jelenleg ${CALIBERS.length} kalibert és ${AMMO.length} konkrét lőszertípust tartunk nyilván.`}
+            title="Kutatott adatbázis"
+            body={`${CALIBERS.length} kalibert tartunk nyilván, ${MANUFACTURER_COUNT} gyártó (Norma, RWS, GECO, Sako, Lapua, Hornady, Federal, Remington, Sellier & Bellot, Blaser, Brenneke, Fiocchi, SAX) kereszthivatkozásával; jelenleg ${AMMO_SEED.filter((a) => !a.TODO_ellenorzendo).length} ellenőrzött termékpéldával induló, bővíthető gyártói minta.`}
           />
           <FeatureCard
-            title="Indoklással"
-            body="Minden ajánlott kaliberhez és lőszerhez elmagyarázzuk, mi alapján illeszkedik a válaszaihoz."
+            title="Indoklással, tárgyilagosan"
+            body="Minden ajánlott kaliberhez elmagyarázzuk, mi alapján illeszkedik a válaszaihoz — feltételes megfogalmazásban, kategorikus kijelentések nélkül."
           />
         </div>
       </section>

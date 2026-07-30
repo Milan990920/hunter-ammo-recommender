@@ -1,7 +1,7 @@
 import Link from "next/link";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import ResultCard from "@/components/ResultCard";
-import { getCaliberById } from "@/lib/data";
+import { getCaliberByNev } from "@/lib/data";
 import { generateRecommendations } from "@/lib/recommendation-engine";
 import {
   BUDGET_OPTIONS,
@@ -72,7 +72,7 @@ export default async function ResultPage({
           href="/wizard"
           className="mt-6 inline-block rounded-full bg-forest-800 px-6 py-3 text-sm font-semibold text-tan-50 hover:bg-forest-700"
         >
-          Kérdőív indítása
+          Ajánlás kérése
         </Link>
       </div>
     );
@@ -80,14 +80,15 @@ export default async function ResultPage({
 
   const { recommendations, fallbackUsed } = generateRecommendations(answers);
   const existingCaliber =
-    answers.existingCaliberId !== "nincs" ? getCaliberById(answers.existingCaliberId) : undefined;
+    answers.existingCaliberId !== "nincs" ? getCaliberByNev(answers.existingCaliberId) : undefined;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
       <h1 className="font-display text-3xl font-semibold text-forest-950">Az Ön ajánlásai</h1>
       <p className="mt-2 text-forest-800">
-        A válaszai alapján az alábbi kaliberek lehetnek megfelelőek — nem csak egy
-        &bdquo;legjobb&rdquo; megoldást mutatunk, hanem az összes érdemi találatot, indoklással.
+        Az Ön válaszai alapján az alábbi kaliberek lehetnek megfelelőek erre a célra. Az
+        eredmény tájékoztató jellegű, és nem helyettesíti a hatályos jogszabályok
+        ismeretét, illetve a fegyverkereskedő vagy vadásztárs szakmai tanácsát.
       </p>
 
       <div className="mt-6 flex flex-wrap gap-2 text-xs">
@@ -108,7 +109,7 @@ export default async function ResultPage({
         </span>
         {existingCaliber && (
           <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
-            Meglévő kaliber: {existingCaliber.name}
+            Meglévő kaliber: {existingCaliber.nev}
           </span>
         )}
       </div>
@@ -123,7 +124,7 @@ export default async function ResultPage({
 
       <div className="mt-8 space-y-6">
         {recommendations.map((rec, i) => (
-          <ResultCard key={rec.caliber.id} recommendation={rec} rank={i + 1} />
+          <ResultCard key={rec.caliber.nev} recommendation={rec} rank={i + 1} game={answers.game} />
         ))}
       </div>
 
@@ -136,7 +137,7 @@ export default async function ResultPage({
           href="/wizard"
           className="rounded-full border border-forest-800/30 px-5 py-2.5 text-sm font-medium text-forest-800 hover:bg-forest-800/5"
         >
-          Kérdőív újratöltése
+          Új keresés indítása
         </Link>
       </div>
     </div>

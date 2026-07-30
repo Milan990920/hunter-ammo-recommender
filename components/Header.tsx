@@ -18,7 +18,7 @@ export default function Header() {
           href="/wizard"
           className="rounded-full bg-forest-800 px-4 py-2 text-sm font-medium text-tan-50 transition hover:bg-forest-700"
         >
-          Kérdőív indítása
+          Ajánlás kérése
         </Link>
       </div>
     </header>

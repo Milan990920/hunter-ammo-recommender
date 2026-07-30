@@ -6,6 +6,7 @@ import ProgressBar from "@/components/ProgressBar";
 import OptionCard from "@/components/OptionCard";
 import { GAME_ICONS, type GameIconKey } from "@/components/icons/GameIcons";
 import { CALIBERS } from "@/lib/data";
+import { KATEGORIA_LABELS } from "@/lib/recommendation-engine";
 import {
   BUDGET_OPTIONS,
   GAME_OPTIONS,
@@ -19,10 +20,17 @@ import {
 import type {
   BudgetLevel,
   Goal,
+  Kategoria,
   RangeCategory,
   RecoilLevel,
   WizardAnswers,
 } from "@/lib/types";
+
+const CALIBERS_BY_KATEGORIA = (Object.keys(KATEGORIA_LABELS) as Kategoria[]).map((kategoria) => ({
+  kategoria,
+  label: KATEGORIA_LABELS[kategoria],
+  calibers: CALIBERS.filter((c) => c.kategoria === kategoria),
+}));
 
 const TOTAL_STEPS = WIZARD_STEP_TITLES.length;
 
@@ -160,10 +168,14 @@ export default function WizardPage() {
                 <option value="" disabled>
                   Válasszon kalibert…
                 </option>
-                {CALIBERS.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                {CALIBERS_BY_KATEGORIA.filter((g) => g.calibers.length > 0).map((group) => (
+                  <optgroup key={group.kategoria} label={group.label}>
+                    {group.calibers.map((c) => (
+                      <option key={c.nev} value={c.nev}>
+                        {c.nev}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
