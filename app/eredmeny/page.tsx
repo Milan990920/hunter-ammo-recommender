@@ -1,0 +1,144 @@
+import Link from "next/link";
+import DisclaimerBanner from "@/components/DisclaimerBanner";
+import ResultCard from "@/components/ResultCard";
+import { getCaliberById } from "@/lib/data";
+import { generateRecommendations } from "@/lib/recommendation-engine";
+import {
+  BUDGET_OPTIONS,
+  GAME_OPTIONS,
+  GOAL_OPTIONS,
+  RANGE_OPTIONS,
+  RECOIL_OPTIONS,
+} from "@/lib/wizard-questions";
+import type {
+  BudgetLevel,
+  Goal,
+  RangeCategory,
+  RecoilLevel,
+  WizardAnswers,
+} from "@/lib/types";
+
+type SearchParams = Record<string, string | string[] | undefined>;
+
+function findLabel<T extends { id: string; label: string }>(options: readonly T[], id?: string) {
+  return options.find((o) => o.id === id)?.label ?? id ?? "—";
+}
+
+function parseAnswers(sp: SearchParams): WizardAnswers | null {
+  const get = (key: string) => (Array.isArray(sp[key]) ? sp[key]?.[0] : sp[key]);
+
+  const game = get("game");
+  const range = get("range") as RangeCategory | undefined;
+  const existingCaliberId = get("existingCaliberId");
+  const recoilSensitivity = get("recoilSensitivity") as RecoilLevel | "nem_szamit" | undefined;
+  const goal = get("goal") as Goal | undefined;
+  const budget = get("budget") as BudgetLevel | undefined;
+  const manufacturers = get("manufacturers") ?? "";
+
+  if (!game || !range || !existingCaliberId || !recoilSensitivity || !goal || !budget) {
+    return null;
+  }
+
+  return {
+    game: game as WizardAnswers["game"],
+    range,
+    existingCaliberId,
+    recoilSensitivity,
+    goal,
+    budget,
+    preferredManufacturers: manufacturers.split(",").filter(Boolean),
+  };
+}
+
+export default async function ResultPage({
+  searchParams,
+}: {
+  searchParams: Promise<SearchParams>;
+}) {
+  const sp = await searchParams;
+  const answers = parseAnswers(sp);
+
+  if (!answers) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 text-center sm:px-6">
+        <h1 className="font-display text-2xl font-semibold text-forest-950">
+          Hiányzó válaszok
+        </h1>
+        <p className="mt-3 text-forest-800">
+          Úgy tűnik, a kérdőívet nem a megfelelő úton érte el. Kérjük, töltse ki
+          újra a kérdőívet az ajánláshoz.
+        </p>
+        <Link
+          href="/wizard"
+          className="mt-6 inline-block rounded-full bg-forest-800 px-6 py-3 text-sm font-semibold text-tan-50 hover:bg-forest-700"
+        >
+          Kérdőív indítása
+        </Link>
+      </div>
+    );
+  }
+
+  const { recommendations, fallbackUsed } = generateRecommendations(answers);
+  const existingCaliber =
+    answers.existingCaliberId !== "nincs" ? getCaliberById(answers.existingCaliberId) : undefined;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+      <h1 className="font-display text-3xl font-semibold text-forest-950">Az Ön ajánlásai</h1>
+      <p className="mt-2 text-forest-800">
+        A válaszai alapján az alábbi kaliberek lehetnek megfelelőek — nem csak egy
+        &bdquo;legjobb&rdquo; megoldást mutatunk, hanem az összes érdemi találatot, indoklással.
+      </p>
+
+      <div className="mt-6 flex flex-wrap gap-2 text-xs">
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Vad: {findLabel(GAME_OPTIONS, answers.game)}
+        </span>
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Táv: {findLabel(RANGE_OPTIONS, answers.range)}
+        </span>
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Visszarúgás: {findLabel(RECOIL_OPTIONS, answers.recoilSensitivity)}
+        </span>
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Cél: {findLabel(GOAL_OPTIONS, answers.goal)}
+        </span>
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Költségkeret: {findLabel(BUDGET_OPTIONS, answers.budget)}
+        </span>
+        {existingCaliber && (
+          <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+            Meglévő kaliber: {existingCaliber.name}
+          </span>
+        )}
+      </div>
+
+      {fallbackUsed && (
+        <p className="mt-6 rounded-xl bg-ember-500/10 px-4 py-3 text-sm text-forest-900">
+          A megadott válaszokra nem volt erősen illeszkedő kaliber az
+          adatbázisunkban, ezért a legközelebbi találatokat mutatjuk. Érdemes a
+          szakkereskedővel is egyeztetni.
+        </p>
+      )}
+
+      <div className="mt-8 space-y-6">
+        {recommendations.map((rec, i) => (
+          <ResultCard key={rec.caliber.id} recommendation={rec} rank={i + 1} />
+        ))}
+      </div>
+
+      <div className="mt-10">
+        <DisclaimerBanner variant="full" />
+      </div>
+
+      <div className="mt-8 flex flex-wrap gap-3">
+        <Link
+          href="/wizard"
+          className="rounded-full border border-forest-800/30 px-5 py-2.5 text-sm font-medium text-forest-800 hover:bg-forest-800/5"
+        >
+          Kérdőív újratöltése
+        </Link>
+      </div>
+    </div>
+  );
+}
