@@ -1,4 +1,3 @@
-import { AMMO } from "@/lib/data";
 import type { GameIconKey } from "@/components/icons/GameIcons";
 
 export const GAME_OPTIONS: { id: GameIconKey; label: string; hint: string }[] = [
@@ -35,8 +34,21 @@ export const BUDGET_OPTIONS = [
   { id: "magas", label: "Magas", hint: "prémium, csúcskategóriás lőszerek is szóba jöhetnek" },
 ] as const;
 
+/** A kutatott 13 gyártós kereszthivatkozás márkái (data/manufacturer_products_seed.json). */
 export const MANUFACTURER_OPTIONS = [
-  ...Array.from(new Set(AMMO.map((a) => a.manufacturer))).sort(),
+  "Norma",
+  "Lapua",
+  "Sako",
+  "Hornady",
+  "Federal",
+  "Remington",
+  "RWS",
+  "GECO",
+  "Sellier & Bellot",
+  "Blaser",
+  "Brenneke",
+  "Fiocchi",
+  "SAX",
 ];
 
 export const NO_MANUFACTURER_PREFERENCE = "nincs_preferencia";
