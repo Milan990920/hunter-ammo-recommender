@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import ProgressBar from "@/components/ProgressBar";
 import OptionCard from "@/components/OptionCard";
 import { GAME_ICONS, type GameIconKey } from "@/components/icons/GameIcons";
-import { CALIBERS, LOVEDEK_KATEGORIAK } from "@/lib/data";
+import { CALIBERS, LOVEDEK_KATEGORIAK, getSubBranchesForGame } from "@/lib/data";
 import { KATEGORIA_LABELS, relevantKategoriak } from "@/lib/recommendation-engine";
 import {
   BUDGET_OPTIONS,
@@ -14,8 +14,10 @@ import {
   MANUFACTURER_OPTIONS,
   NO_MANUFACTURER_PREFERENCE,
   RANGE_OPTIONS,
+  STEP_ORDER,
+  STEP_TITLES,
   VADASZATI_MOD_OPTIONS,
-  WIZARD_STEP_TITLES,
+  type StepKind,
 } from "@/lib/wizard-questions";
 import type {
   BudgetLevel,
@@ -23,6 +25,7 @@ import type {
   Kategoria,
   LovedekKategoriaId,
   RangeCategory,
+  SubBranchId,
   VadaszatiMod,
   WizardAnswers,
 } from "@/lib/types";
@@ -39,8 +42,6 @@ const CALIBERS_BY_KATEGORIA = (Object.keys(KATEGORIA_LABELS) as Kategoria[]).map
 // készítve, ha a jövőben bővül a fajlista.
 const AFRIKAI_RELEVANS_KATEGORIAK: Kategoria[] = ["afrikai_nagyvad", "weatherby"];
 
-const TOTAL_STEPS = WIZARD_STEP_TITLES.length;
-
 type PartialAnswers = Partial<WizardAnswers>;
 
 export default function WizardPage() {
@@ -51,10 +52,16 @@ export default function WizardPage() {
     olommentesSzukseges: false,
   });
 
-  // Csak akkor mutassuk a "mély átütés / afrikai" opciót, ha a kiválasztott
-  // vadfajhoz ténylegesen afrikai nagyvad/Weatherby kategória is releváns —
-  // a jelenlegi GAME_TO_KATEGORIA leképezésben ez sosem fordul elő, de a kód
-  // helyesen van bekötve, ha a fajlista a jövőben bővülne.
+  // A "subbranch" lépés csak akkor aktív, ha a kiválasztott vadfajhoz tartozik
+  // ivar/méret szerinti al-ág (vaddiszno, gímszarvas, dámszarvas, muflon).
+  const subBranches = answers.game ? getSubBranchesForGame(answers.game) : null;
+  const activeSteps: StepKind[] = useMemo(
+    () => STEP_ORDER.filter((kind) => kind !== "subbranch" || Boolean(subBranches)),
+    [subBranches],
+  );
+  const totalSteps = activeSteps.length;
+  const currentKind = activeSteps[step];
+
   const showAfrikaiOption = useMemo(() => {
     if (!answers.game) return false;
     return relevantKategoriak(answers.game).some((k) => AFRIKAI_RELEVANS_KATEGORIAK.includes(k));
@@ -65,36 +72,39 @@ export default function WizardPage() {
   );
 
   const isStepComplete = useMemo(() => {
-    switch (step) {
-      case 0:
+    switch (currentKind) {
+      case "game":
         return Boolean(answers.game);
-      case 1:
+      case "subbranch":
+        return Boolean(answers.subCategory);
+      case "range":
         return Boolean(answers.range);
-      case 2:
+      case "fegyvertipus":
         return Boolean(answers.fegyvertipus);
-      case 3:
+      case "lovedek":
         return Boolean(answers.lovedekKategoria);
-      case 4:
+      case "vadaszatimod":
         return Boolean(answers.vadaszatiMod);
-      case 5:
+      case "budget":
         return Boolean(answers.budget);
-      case 6:
+      case "existingCaliber":
         return Boolean(answers.existingCaliberId);
-      case 7:
+      case "manufacturers":
         return true;
       default:
         return false;
     }
-  }, [step, answers]);
+  }, [currentKind, answers]);
 
   function goNext() {
-    if (step < TOTAL_STEPS - 1) {
+    if (step < totalSteps - 1) {
       setStep((s) => s + 1);
       return;
     }
     const finalAnswers = answers as WizardAnswers;
     const params = new URLSearchParams({
       game: finalAnswers.game,
+      subCategory: finalAnswers.subCategory ?? "",
       range: finalAnswers.range,
       fegyvertipus: finalAnswers.fegyvertipus,
       lovedekKategoria: finalAnswers.lovedekKategoria,
@@ -109,6 +119,10 @@ export default function WizardPage() {
 
   function goBack() {
     setStep((s) => Math.max(0, s - 1));
+  }
+
+  function selectGame(id: GameIconKey) {
+    setAnswers((prev) => ({ ...prev, game: id, subCategory: undefined }));
   }
 
   function toggleManufacturer(name: string) {
@@ -127,13 +141,13 @@ export default function WizardPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-      <ProgressBar step={step} total={TOTAL_STEPS} />
+      <ProgressBar step={step} total={totalSteps} />
       <h1 className="font-display text-2xl font-semibold text-forest-950 sm:text-3xl">
-        {WIZARD_STEP_TITLES[step]}
+        {currentKind ? STEP_TITLES[currentKind] : ""}
       </h1>
 
       <div className="mt-8">
-        {step === 0 && (
+        {currentKind === "game" && (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {GAME_OPTIONS.map((opt) => {
               const Icon = GAME_ICONS[opt.id as GameIconKey];
@@ -144,14 +158,29 @@ export default function WizardPage() {
                   hint={opt.hint}
                   icon={<Icon className="h-12 w-12" />}
                   selected={answers.game === opt.id}
-                  onClick={() => setAnswers((prev) => ({ ...prev, game: opt.id }))}
+                  onClick={() => selectGame(opt.id)}
                 />
               );
             })}
           </div>
         )}
 
-        {step === 1 && (
+        {currentKind === "subbranch" && subBranches && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {subBranches.map((opt) => (
+              <OptionCard
+                key={opt.alag_id}
+                label={opt.megjelenites}
+                selected={answers.subCategory === opt.alag_id}
+                onClick={() =>
+                  setAnswers((prev) => ({ ...prev, subCategory: opt.alag_id as SubBranchId }))
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {currentKind === "range" && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {RANGE_OPTIONS.map((opt) => (
               <OptionCard
@@ -167,7 +196,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 2 && (
+        {currentKind === "fegyvertipus" && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {FEGYVERTIPUS_OPTIONS.map((opt) => (
               <OptionCard
@@ -183,7 +212,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 3 && (
+        {currentKind === "lovedek" && (
           <div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {lovedekOptions.map((opt) => (
@@ -231,7 +260,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 4 && (
+        {currentKind === "vadaszatimod" && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {VADASZATI_MOD_OPTIONS.map((opt) => (
               <OptionCard
@@ -247,7 +276,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 5 && (
+        {currentKind === "budget" && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {BUDGET_OPTIONS.map((opt) => (
               <OptionCard
@@ -263,7 +292,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 6 && (
+        {currentKind === "existingCaliber" && (
           <div className="space-y-4">
             <OptionCard
               label="Még nincs fegyverem"
@@ -303,7 +332,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 7 && (
+        {currentKind === "manufacturers" && (
           <div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {MANUFACTURER_OPTIONS.map((name) => (
@@ -344,7 +373,7 @@ export default function WizardPage() {
           disabled={!isStepComplete}
           className="rounded-full bg-forest-800 px-6 py-2.5 text-sm font-semibold text-tan-50 transition hover:bg-forest-700 disabled:cursor-not-allowed disabled:bg-forest-900/20 disabled:text-forest-900/40"
         >
-          {step === TOTAL_STEPS - 1 ? "Eredmény megtekintése" : "Tovább →"}
+          {step === totalSteps - 1 ? "Eredmény megtekintése" : "Tovább →"}
         </button>
       </div>
     </div>

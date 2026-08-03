@@ -69,13 +69,42 @@ export const MANUFACTURER_OPTIONS = [
 
 export const NO_MANUFACTURER_PREFERENCE = "nincs_preferencia";
 
-export const WIZARD_STEP_TITLES = [
-  "Milyen vadra vadászik jellemzően?",
-  "Milyen terepen / távolságból jellemző a lövés?",
-  "Milyen fegyverrel vadászik?",
-  "Mit vár el elsősorban a lövedéktől becsapódáskor?",
-  "Milyen vadászati módra keresi elsősorban a lőszert?",
-  "Milyen költségkeretet szán lőszerre?",
-  "Van már fegyvere egy adott kaliberre?",
-  "Van preferált gyártója?",
-] as const;
+/**
+ * A wizard lépéssorrendje "lépés-fajta" alapján, nem fix indexszel — a
+ * "subbranch" lépés csak akkor kerül az aktív lépések közé, ha a kiválasztott
+ * vadfajhoz tartozik ivar/méret szerinti al-ág (lásd data/vadfaj_kategoriak.json).
+ */
+export type StepKind =
+  | "game"
+  | "subbranch"
+  | "range"
+  | "fegyvertipus"
+  | "lovedek"
+  | "vadaszatimod"
+  | "budget"
+  | "existingCaliber"
+  | "manufacturers";
+
+export const STEP_ORDER: StepKind[] = [
+  "game",
+  "subbranch",
+  "range",
+  "fegyvertipus",
+  "lovedek",
+  "vadaszatimod",
+  "budget",
+  "existingCaliber",
+  "manufacturers",
+];
+
+export const STEP_TITLES: Record<StepKind, string> = {
+  game: "Milyen vadra vadászik jellemzően?",
+  subbranch: "Milyen ivarú vagy méretű egyedre vadászik?",
+  range: "Milyen terepen / távolságból jellemző a lövés?",
+  fegyvertipus: "Milyen fegyverrel vadászik?",
+  lovedek: "Mit vár el elsősorban a lövedéktől becsapódáskor?",
+  vadaszatimod: "Milyen vadászati módra keresi elsősorban a lőszert?",
+  budget: "Milyen költségkeretet szán lőszerre?",
+  existingCaliber: "Van már fegyvere egy adott kaliberre?",
+  manufacturers: "Van preferált gyártója?",
+};

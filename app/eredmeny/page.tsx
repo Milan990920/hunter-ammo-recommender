@@ -1,7 +1,7 @@
 import Link from "next/link";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import ResultCard from "@/components/ResultCard";
-import { getCaliberByNev, getLovedekKategoria } from "@/lib/data";
+import { getCaliberByNev, getLovedekKategoria, getSubBranchesForGame } from "@/lib/data";
 import { generateRecommendations, resolvePreferredLovedekKategoria } from "@/lib/recommendation-engine";
 import {
   BUDGET_OPTIONS,
@@ -15,6 +15,7 @@ import type {
   FegyverTipus,
   LovedekKategoriaId,
   RangeCategory,
+  SubBranchId,
   VadaszatiMod,
   WizardAnswers,
 } from "@/lib/types";
@@ -29,6 +30,8 @@ function parseAnswers(sp: SearchParams): WizardAnswers | null {
   const get = (key: string) => (Array.isArray(sp[key]) ? sp[key]?.[0] : sp[key]);
 
   const game = get("game");
+  const subCategoryRaw = get("subCategory");
+  const subCategory = subCategoryRaw ? (subCategoryRaw as SubBranchId) : undefined;
   const range = get("range") as RangeCategory | undefined;
   const fegyvertipus = get("fegyvertipus") as FegyverTipus | undefined;
   const lovedekKategoria = get("lovedekKategoria") as LovedekKategoriaId | undefined;
@@ -44,6 +47,7 @@ function parseAnswers(sp: SearchParams): WizardAnswers | null {
 
   return {
     game: game as WizardAnswers["game"],
+    subCategory,
     range,
     fegyvertipus,
     lovedekKategoria,
@@ -89,6 +93,9 @@ export default async function ResultPage({
   const lovedekKategoria = getLovedekKategoria(answers.lovedekKategoria);
   const preferredLovedekKategoria = resolvePreferredLovedekKategoria(answers);
   const isHajtovadaszat = answers.vadaszatiMod === "hajtovadaszat_treles";
+  const subBranchLabel = answers.subCategory
+    ? getSubBranchesForGame(answers.game)?.find((b) => b.alag_id === answers.subCategory)?.megjelenites
+    : undefined;
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -103,6 +110,11 @@ export default async function ResultPage({
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
           Vad: {findLabel(GAME_OPTIONS, answers.game)}
         </span>
+        {subBranchLabel && (
+          <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+            Ivar/méret: {subBranchLabel}
+          </span>
+        )}
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
           Táv: {findLabel(RANGE_OPTIONS, answers.range)}
         </span>
@@ -153,6 +165,7 @@ export default async function ResultPage({
             rank={i + 1}
             game={answers.game}
             preferredLovedekKategoria={preferredLovedekKategoria}
+            subCategory={answers.subCategory}
           />
         ))}
       </div>

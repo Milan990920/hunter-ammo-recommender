@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { GAME_ICONS, type GameIconKey } from "@/components/icons/GameIcons";
 import { getLovedekKategoria } from "@/lib/data";
-import { isDrivenHuntProduct, KATEGORIA_LABELS } from "@/lib/recommendation-engine";
-import type { CaliberRecommendation, EnrichedAmmo, GameType, LovedekKategoriaId } from "@/lib/types";
+import { isDrivenHuntProduct, KATEGORIA_LABELS, shouldShow308WinBikaSzabaly } from "@/lib/recommendation-engine";
+import type { CaliberRecommendation, EnrichedAmmo, GameType, LovedekKategoriaId, SubBranchId } from "@/lib/types";
 
 const AR_SAV_LABELS: Record<string, string> = {
   ertek: "Érték kategória",
@@ -32,17 +32,20 @@ export default function ResultCard({
   rank,
   game,
   preferredLovedekKategoria,
+  subCategory,
 }: {
   recommendation: CaliberRecommendation;
   rank: number;
   game: GameType;
   preferredLovedekKategoria: LovedekKategoriaId;
+  subCategory?: SubBranchId;
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const { caliber, score, maxScore, reasons, ammoOptions, isOwned } = recommendation;
   const matchPercent = Math.round((score / maxScore) * 100);
   const Icon = GAME_ICONS[game as GameIconKey];
   const ammoGroups = groupAmmo(ammoOptions, preferredLovedekKategoria);
+  const show308WinNote = shouldShow308WinBikaSzabaly(caliber.nev, subCategory);
 
   return (
     <section className="rounded-3xl border border-forest-900/10 bg-white p-6 shadow-sm sm:p-8">
@@ -80,6 +83,16 @@ export default function ResultCard({
             ))}
           </ul>
         </div>
+      )}
+
+      {show308WinNote && (
+        <p className="mt-4 rounded-xl bg-ember-500/10 px-4 py-3 text-sm text-forest-900">
+          A .308 Win bikára is kiváló, de érdemes a nehezebb, kötött magú lőszereket (pl. Norma
+          Bondstrike 180 gr) választani, és a lövést inkább mérsékelt távolságon leadni. A hüvely
+          kapacitása miatt 180 grain fölé nem igazán érdemes menni ennél a kalibernél. Ha
+          rendszeresen kifejezetten nagytestű bikára vadászik, a 8x57 JS, 9,3x62 vagy .300 Win Mag
+          nagyobb tartalékot ad.
+        </p>
       )}
 
       <button
