@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { GAME_ICONS, type GameIconKey } from "@/components/icons/GameIcons";
 import { getLovedekKategoria } from "@/lib/data";
-import { KATEGORIA_LABELS } from "@/lib/recommendation-engine";
+import { isDrivenHuntProduct, KATEGORIA_LABELS } from "@/lib/recommendation-engine";
 import type { CaliberRecommendation, EnrichedAmmo, GameType, LovedekKategoriaId } from "@/lib/types";
 
 const AR_SAV_LABELS: Record<string, string> = {
@@ -131,7 +131,7 @@ export default function ResultCard({
               <div key={bucket}>
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-forest-700">
                   {kategoriaInfo?.megjelenites ?? bucket}
-                  {bucket === preferredLovedekKategoria && " (az Ön választása)"}
+                  {bucket === preferredLovedekKategoria && " (kiemelt kategória a válaszai alapján)"}
                 </p>
                 <div className="space-y-3">
                   {arSavGroups.map(({ arSav, items: arSavItems }) => (
@@ -149,11 +149,18 @@ export default function ResultCard({
                               <p className="text-xs font-semibold uppercase tracking-wide text-forest-600">
                                 {ammo.gyarto}
                               </p>
-                              {ammo.olommentes && (
-                                <span className="shrink-0 rounded-full bg-forest-700/10 px-2 py-0.5 text-[10px] font-semibold text-forest-800">
-                                  Ólommentes
-                                </span>
-                              )}
+                              <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                                {isDrivenHuntProduct(ammo) && (
+                                  <span className="rounded-full bg-ember-500/15 px-2 py-0.5 text-[10px] font-semibold text-ember-600">
+                                    Hajtásra ajánlott
+                                  </span>
+                                )}
+                                {ammo.olommentes && (
+                                  <span className="rounded-full bg-forest-700/10 px-2 py-0.5 text-[10px] font-semibold text-forest-800">
+                                    Ólommentes
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <p className="font-display text-base font-semibold text-forest-950">
                               {ammo.termeknev}
@@ -161,6 +168,7 @@ export default function ResultCard({
                             <p className="mt-1 text-xs text-forest-700/80">{ammo.tomeg}</p>
                             <p className="mt-2 text-xs text-forest-700/70">
                               {ammo.forras_megjegyzes}
+                              {ammo.ritka_kaliber && " Ritka kaliber ehhez a gyártóhoz Magyarországon."}
                             </p>
                           </div>
                         ))}
