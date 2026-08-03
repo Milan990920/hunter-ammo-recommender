@@ -1,0 +1,62 @@
+{
+  "vaddiszno_fiatal": {
+    "ajanlott_kaliberek": [".243 Winchester", "6,5x55 SE (Swedish)", "7x64 (Brenneke)", ".308 Winchester"],
+    "suly_irany": "konnyebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli közepes tartomány elegendő (pl. .308 Win: 150–165 gr is megfelelő)",
+    "lovedek_kategoria_ajanlas": "kiegyensúlyozott (bonded/kontrollált expanziójú), közepes tömegtartomány",
+    "kiegyensulyozott_kotelezo": false
+  },
+  "vaddiszno_kan": {
+    "ajanlott_kaliberek": ["7x64 (Brenneke)", ".30-06 Springfield", "8x57 IS (JS)", "9,3x62", ".300 Winchester Magnum"],
+    "suly_irany": "nehezebb",
+    "lovedektomeg_iranyelv": "kifejezetten a kaliberen belüli nehezebb tartomány — a vastag pajzs és a nagy testtömeg miatt itt a mélységi hatás a kritikus szempont",
+    "lovedek_kategoria_ajanlas": "kifejezetten kiegyensúlyozott/bonded, a 'gyors hatás' kategória itt ne jelenjen meg alapértelmezésben",
+    "kiegyensulyozott_kotelezo": true,
+    "megjegyzes": "A .308 Win feltételes bika/kan-szabály itt is érvényes, mint a gímszarvas bika-ágban."
+  },
+  "gimszarvas_tehen": {
+    "ajanlott_kaliberek": ["6,5x55 SE (Swedish)", "6,5x57", "6,5x57R", "7x64 (Brenneke)", "7x65R", ".308 Winchester", ".30-06 Springfield"],
+    "suly_irany": "konnyebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli közepes tartomány elegendő (pl. .308 Win: 150–165 gr is megfelelő)",
+    "lovedek_kategoria_ajanlas": "kiegyensúlyozott (bonded/kontrollált expanziójú)",
+    "kiegyensulyozott_kotelezo": false
+  },
+  "gimszarvas_bika": {
+    "ajanlott_kaliberek": ["7x64 (Brenneke)", ".30-06 Springfield", ".308 Winchester", "8x57 IS (JS)", "9,3x62", ".300 Winchester Magnum"],
+    "suly_irany": "nehezebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli nehezebb tartomány (pl. .308 Win: 180 gr / 11,7 g és afölött, ne 150 gr)",
+    "lovedek_kategoria_ajanlas": "kifejezetten kiegyensúlyozott (bonded/kontrollált expanziójú), a 'gyors hatás' kategória itt ne jelenjen meg alapértelmezésben",
+    "kiegyensulyozott_kotelezo": true,
+    "megjegyzes": "Lásd a .308 Win feltételes bika-szabályt: csak 180 gr/11,7 g és afölötti, lehetőleg kötött magú termékekkel ajánlott ebben az al-ágban."
+  },
+  "damszarvas_suta": {
+    "ajanlott_kaliberek": [".243 Winchester", ".25-06 Remington", "6,5x55 SE (Swedish)", "6,5x57", "7x64 (Brenneke)", ".308 Winchester"],
+    "suly_irany": "konnyebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli könnyebb-közepes tartomány elegendő — a dám könnyebb testfelépítése miatt a .243 Win/.25-06 is jó választás lehet, ami a gímszarvas tehén-ágból hiányzik",
+    "lovedek_kategoria_ajanlas": "kiegyensúlyozott (bonded/kontrollált expanziójú)",
+    "kiegyensulyozott_kotelezo": false
+  },
+  "damszarvas_bika": {
+    "ajanlott_kaliberek": ["7x64 (Brenneke)", ".308 Winchester", ".30-06 Springfield", "8x57 IS (JS)", "9,3x62"],
+    "suly_irany": "nehezebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli nehezebb tartomány, de a dám kisebb testtömege miatt itt nem szükséges alapértelmezésben magnum kaliber",
+    "lovedek_kategoria_ajanlas": "kifejezetten kiegyensúlyozott (bonded/kontrollált expanziójú), a 'gyors hatás' kategória itt ne jelenjen meg alapértelmezésben",
+    "kiegyensulyozott_kotelezo": true,
+    "megjegyzes": "A .308 Win feltételes bika/kan-szabály itt is érvényes, mint a gímszarvas bika-ágban."
+  },
+  "muflon_juh": {
+    "ajanlott_kaliberek": [".243 Winchester", ".25-06 Remington", "6,5x55 SE (Swedish)", "6.5 Creedmoor", "6,5x57"],
+    "suly_irany": "konnyebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli könnyebb-közepes tartomány elegendő — a muflon könnyebb testfelépítése miatt a .243 Win/.25-06 is jó választás lehet",
+    "lovedek_kategoria_ajanlas": "kiegyensúlyozott (bonded/kontrollált expanziójú)",
+    "kiegyensulyozott_kotelezo": false
+  },
+  "muflon_kos": {
+    "ajanlott_kaliberek": ["6,5x55 SE (Swedish)", "7x64 (Brenneke)", ".308 Winchester", ".30-06 Springfield", "6.5 PRC"],
+    "suly_irany": "nehezebb",
+    "lovedektomeg_iranyelv": "a kaliberen belüli nehezebb tartomány, de a muflon kisebb testtömege miatt itt nem szükséges alapértelmezésben magnum kaliber — a 6.5 PRC inkább a jellemzően hosszabb hegyvidéki lövéstávolság miatt jöhet szóba",
+    "lovedek_kategoria_ajanlas": "kifejezetten kiegyensúlyozott (bonded/kontrollált expanziójú), a 'gyors hatás' kategória itt ne jelenjen meg alapértelmezésben",
+    "kiegyensulyozott_kotelezo": true,
+    "megjegyzes": "A .308 Win feltételes bika/kan-szabály itt is érvényes, mint a gímszarvas bika-ágban."
+  }
+}

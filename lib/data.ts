@@ -1,15 +1,56 @@
 import calibersData from "@/data/calibers.json";
 import ammoSeedData from "@/data/manufacturer_products_seed.json";
 import lovedekKategoriakData from "@/data/lovedek_kategoriak.json";
+import vadfajKategoriakData from "@/data/vadfaj_kategoriak.json";
+import alagAjanlasokData from "@/data/alag_ajanlasok.json";
 import { enrichAmmo } from "@/lib/ammo-classification";
-import type { AmmoSeedEntry, Caliber, EnrichedAmmo, LovedekKategoria, LovedekKategoriaId } from "@/lib/types";
+import type {
+  AlagAjanlas,
+  AmmoSeedEntry,
+  Caliber,
+  EnrichedAmmo,
+  GameType,
+  LovedekKategoria,
+  LovedekKategoriaId,
+  SubBranchId,
+  VadfajAlagLeiro,
+  VadfajKategoria,
+} from "@/lib/types";
 
 export const CALIBERS: Caliber[] = calibersData as Caliber[];
 export const AMMO_SEED: AmmoSeedEntry[] = ammoSeedData as AmmoSeedEntry[];
 export const LOVEDEK_KATEGORIAK: LovedekKategoria[] = lovedekKategoriakData as LovedekKategoria[];
+export const VADFAJ_KATEGORIAK: VadfajKategoria[] = vadfajKategoriakData as VadfajKategoria[];
+export const ALAG_AJANLASOK: Record<SubBranchId, AlagAjanlas> = alagAjanlasokData as Record<
+  SubBranchId,
+  AlagAjanlas
+>;
 
 export function getLovedekKategoria(id: LovedekKategoriaId): LovedekKategoria | undefined {
   return LOVEDEK_KATEGORIAK.find((k) => k.id === id);
+}
+
+/** A wizard GameType kulcsai és a vadfaj_kategoriak.json kategoria_id mezői néhol eltérnek (aprovad vs aprovad_ragadozo). */
+const GAME_TO_KATEGORIA_ID: Record<GameType, string> = {
+  aprovad: "aprovad_ragadozo",
+  oz: "oz",
+  vaddiszno: "vaddiszno",
+  gimszarvas: "gimszarvas",
+  damszarvas: "damszarvas",
+  muflon: "muflon",
+  vegyes: "vegyes",
+};
+
+/** A kiválasztott vadfajhoz tartozó ivar/méret szerinti al-ágak, vagy null, ha nincs ilyen. */
+export function getSubBranchesForGame(game: GameType): VadfajAlagLeiro[] | null {
+  const kategoriaId = GAME_TO_KATEGORIA_ID[game];
+  const kategoria = VADFAJ_KATEGORIAK.find((k) => k.kategoria_id === kategoriaId);
+  if (!kategoria?.alag || !kategoria.alagak) return null;
+  return kategoria.alagak;
+}
+
+export function getAlagAjanlas(subCategory: SubBranchId): AlagAjanlas | undefined {
+  return ALAG_AJANLASOK[subCategory];
 }
 
 /**

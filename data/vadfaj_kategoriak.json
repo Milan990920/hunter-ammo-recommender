@@ -1,0 +1,104 @@
+[
+  {
+    "kategoria_id": "aprovad_ragadozo",
+    "megjelenites": "Ragadozó / dúvad (róka, aranysakál, borz, nyestkutya, mosómedve)",
+    "alag": false,
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "oz",
+    "megjelenites": "Őz és hasonló könnyű vad",
+    "alag": false,
+    "megjegyzes": "Mindkét ivar hasonló testfelépítésű, nincs szükség ivar szerinti al-ágra.",
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "vaddiszno",
+    "megjelenites": "Vaddisznó",
+    "alag": true,
+    "alagak": [
+      { "alag_id": "vaddiszno_fiatal", "megjelenites": "Malac / süldő / közepes egyed" },
+      { "alag_id": "vaddiszno_kan", "megjelenites": "Erős, idős kan (vastag pajzzsal)" }
+    ],
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "gimszarvas",
+    "megjelenites": "Gímszarvas",
+    "alag": true,
+    "alagak": [
+      { "alag_id": "gimszarvas_tehen", "megjelenites": "Tehén / ünő / borjú (könnyebb testfelépítés)" },
+      { "alag_id": "gimszarvas_bika", "megjelenites": "Bika (nagytestű, erősebb csontozat)" }
+    ],
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "damszarvas",
+    "megjelenites": "Dámszarvas",
+    "alag": true,
+    "alagak": [
+      { "alag_id": "damszarvas_suta", "megjelenites": "Suta / borjú" },
+      { "alag_id": "damszarvas_bika", "megjelenites": "Bika" }
+    ],
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "muflon",
+    "megjelenites": "Muflon",
+    "alag": true,
+    "alagak": [
+      { "alag_id": "muflon_juh", "megjelenites": "Juh" },
+      { "alag_id": "muflon_kos", "megjelenites": "Kos" }
+    ],
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "vegyes",
+    "megjelenites": "Vegyes",
+    "alag": false,
+    "megjegyzes": "Több vadfajra is jellemzően vadászom — nem szerepelt a kapott gyökér-listában, de megtartottuk, mert önálló funkciót lát el és eltávolítása visszalépés lenne.",
+    "implementalva": true
+  },
+  {
+    "kategoria_id": "hajtovadaszat",
+    "megjelenites": "Vaddisznó és nagyvad — hajtóvadászat/terelés",
+    "alag": false,
+    "megjegyzes": "Keresztmetsző szempont, NEM vált ki fajválasztást — ez már önálló wizard-kérdésként létezik (\"Milyen vadászati módra keresi elsősorban a lőszert?\"), ezért itt nem lett új fajválasztó opcióként bekötve.",
+    "implementalva": false
+  },
+  {
+    "kategoria_id": "billeno_csovu_hagyomanyos",
+    "megjelenites": "Billenő csövű / kombinált fegyveres hagyományos kaliberek",
+    "alag": false,
+    "megjegyzes": "Ez már önálló wizard-kérdés (\"Milyen fegyverrel vadászik?\") — új fajválasztó opcióként redundáns lenne, ezért nem lett bekötve.",
+    "implementalva": false
+  },
+  {
+    "kategoria_id": "kulfoldi_nagytestu",
+    "megjelenites": "Nagytestű, kemény vadra szánt külföldi vadászút (jávorszarvas, bölény, medve)",
+    "alag": false,
+    "megjegyzes": "Ezekhez a fajokhoz a calibers.json-ban nincs se faj-, se kaliber-adat. Nem lett bekötve, mert kitalált tartalommal kellett volna feltölteni.",
+    "implementalva": false
+  },
+  {
+    "kategoria_id": "afrikai_nagyvad",
+    "megjelenites": "Afrikai és veszélyes nagyvad, trófeaút",
+    "alag": false,
+    "megjegyzes": "A calibers.json kategoria mezőjében már létezik afrikai_nagyvad érték, de szándékosan nincs egyetlen hazai vadfajhoz sem rendelve (lásd korábbi döntés a README-ben) — ezt a döntést ez a kérés nem írta felül explicit módon, ezért nem lett bekötve új, önálló fajválasztóként.",
+    "implementalva": false
+  },
+  {
+    "kategoria_id": "ritka_gyujtoi",
+    "megjelenites": "Egyedi, ritka vagy gyűjtői kaliberek",
+    "alag": false,
+    "megjegyzes": "Nincs egyértelmű, önálló szűrési logika specifikálva hozzá — nem lett bekötve.",
+    "implementalva": false
+  },
+  {
+    "kategoria_id": "vadkarelharitas",
+    "megjelenites": "Vadkárelhárítás / gazdaságos állományszabályozás",
+    "alag": false,
+    "megjegyzes": "Nincs egyértelmű, önálló szűrési logika specifikálva hozzá — nem lett bekötve.",
+    "implementalva": false
+  }
+]

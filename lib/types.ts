@@ -28,6 +28,44 @@ export interface LovedekKategoria {
 /** Termék ár-sávja (a lövedék-kiválasztás csoportosításához). */
 export type ArSav = "ertek" | "premium";
 
+/** Az ivar/méret szerinti al-ágak azonosítói (data/alag_ajanlasok.json). */
+export type SubBranchId =
+  | "vaddiszno_fiatal"
+  | "vaddiszno_kan"
+  | "gimszarvas_tehen"
+  | "gimszarvas_bika"
+  | "damszarvas_suta"
+  | "damszarvas_bika"
+  | "muflon_juh"
+  | "muflon_kos";
+
+/** Egy vadfaj-kategória al-ága (data/vadfaj_kategoriak.json). */
+export interface VadfajAlagLeiro {
+  alag_id: SubBranchId;
+  megjelenites: string;
+}
+
+/** Egy vadfaj-kategória a data/vadfaj_kategoriak.json fájlból. */
+export interface VadfajKategoria {
+  kategoria_id: string;
+  megjelenites: string;
+  alag: boolean;
+  alagak?: VadfajAlagLeiro[];
+  megjegyzes?: string;
+  /** Ha false: ez a kategória csak dokumentációs/referencia célból szerepel, nincs bekötve a wizardba — lásd README. */
+  implementalva: boolean;
+}
+
+/** Egy al-ághoz tartozó kaliber-/lövedék-ajánlás (data/alag_ajanlasok.json). */
+export interface AlagAjanlas {
+  ajanlott_kaliberek: string[];
+  suly_irany: "konnyebb" | "nehezebb";
+  lovedektomeg_iranyelv: string;
+  lovedek_kategoria_ajanlas: string;
+  kiegyensulyozott_kotelezo: boolean;
+  megjegyzes?: string;
+}
+
 /**
  * A kutatott kaliberadatbázis kategóriái (lásd data/calibers.json). Ez a
  * kutatásból átvett, tényleges csoportosítás — nem mi találtuk ki.
@@ -75,6 +113,13 @@ export interface AmmoSeedEntry {
   TODO_ellenorzendo?: boolean;
   /** Ha true: a kaliber ritkán elérhető ehhez a gyártóhoz Magyarországon. */
   ritka_kaliber?: boolean;
+  /** Mely alag_ajanlasok.json al-ágakhoz illik kifejezetten ez a termék (ha ismert). */
+  alagak?: string[];
+  /** Csak a néhány, teljeskörűen hivatalos gyártói adattal ellenőrzött tételnél kitöltve. */
+  sebesseg_ms?: number;
+  energia_j?: number;
+  ballisztikai_egyutthato?: number;
+  lovedek_tipus?: string;
 }
 
 /**
@@ -89,6 +134,8 @@ export interface EnrichedAmmo extends AmmoSeedEntry {
 
 export interface WizardAnswers {
   game: GameType;
+  /** Csak akkor releváns, ha a `game`-hez tartozik ivar/méret szerinti al-ág. */
+  subCategory?: SubBranchId;
   range: RangeCategory;
   fegyvertipus: FegyverTipus;
   lovedekKategoria: LovedekKategoriaId;
