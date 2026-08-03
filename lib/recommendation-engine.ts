@@ -1,6 +1,13 @@
 import { isRimmedCaliber } from "@/lib/ammo-classification";
-import { AMMO_SEED, CALIBERS, getEnrichedAmmoForCaliber } from "@/lib/data";
-import type { Caliber, EnrichedAmmo, Kategoria, LovedekKategoriaId, RangeCategory, WizardAnswers } from "@/lib/types";
+import { AMMO_SEED, CALIBERS, getAlagAjanlas, getEnrichedAmmoForCaliber } from "@/lib/data";
+import type {
+  Caliber,
+  EnrichedAmmo,
+  Kategoria,
+  LovedekKategoriaId,
+  RangeCategory,
+  WizardAnswers,
+} from "@/lib/types";
 
 /**
  * Egyszerű, átlátható pontozó logika a kutatott kaliber-adatbázisra
@@ -11,6 +18,19 @@ import type { Caliber, EnrichedAmmo, Kategoria, LovedekKategoriaId, RangeCategor
  * kategória↔lőtávolság megfeleltetések viszont NEM részei a kutatásnak — ez
  * a mi saját, vadászati gyakorlatra épülő besorolásunk, hogy a wizard
  * kérdéseit össze tudjuk kötni a kategória-alapú adatbázissal.
+ *
+ * IVAR/MÉRET AL-ÁG (scoreAlag, data/alag_ajanlasok.json) — szakirodalmi alap:
+ * a német vadászati szakirodalom és vadászvizsga-felkészítő anyagok
+ * következetesen megkülönböztetik a nagytestű szarvasféléknél és a
+ * vaddisznónál a "gyenge" (nőivarú/fiatal, németül "Kahlwild" — agancstalan
+ * vad, mert csak a hím fejleszt agancsot) és "erős" (kifejlett hím) egyedeket,
+ * eltérő kaliber-/lövedéktömeg-ajánlással (pl. gyenge egyedre 6,5x57/7x64/
+ * .308 Win/.30-06 könnyebb tartományban, erős egyedre semmi 7mm alatt,
+ * nehezebb tartományban). A hivatalos NÉMET minimumkövetelmény (Bundesjagdgesetz:
+ * őzre 1000 J/100m, más patásvadra min. 6,5mm + 2000 J/100m) ITT KIZÁRÓLAG
+ * összehasonlítási referencia, NEM magyar jogszabályi tény — a magyar
+ * minimumokat ettől függetlenül kell ellenőrizni, mielőtt bármi jogszabályi
+ * tényként szerepelne az oldalon.
  *
  * A korábbi verzióhoz képest a végső rendezés leegyszerűsödött: a
  * kategória/lőtávolság/fegyvertípus/meglévő-kaliber szempontok csak azt
@@ -184,6 +204,28 @@ function scoreVadaszatiMod(caliber: Caliber, answers: WizardAnswers) {
   return { points: 0, reason: null };
 }
 
+const ALAG_WEIGHT = 1.5;
+
+/**
+ * Ivar/méret szerinti al-ág (data/alag_ajanlasok.json) alapú pluszpont — a
+ * német vadászati szakirodalom "gyenge/erős" egyed megkülönböztetése alapján
+ * (lásd README). Puha preferencia: az al-ág ajánlott kaliberlistáján kívüli
+ * kaliberek nem kapnak pontot, de nem is zárjuk ki őket a kategória-egyezés
+ * hard gate-jén felül.
+ */
+function scoreAlag(caliber: Caliber, answers: WizardAnswers) {
+  if (!answers.subCategory) return { points: 0, reason: null };
+  const alag = getAlagAjanlas(answers.subCategory);
+  if (!alag) return { points: 0, reason: null };
+  if (alag.ajanlott_kaliberek.includes(caliber.nev)) {
+    return {
+      points: ALAG_WEIGHT,
+      reason: `Az Ön által megadott ivar/méret esetén jellemzően ajánlott kaliber (${alag.lovedektomeg_iranyelv}).`,
+    };
+  }
+  return { points: 0, reason: null };
+}
+
 function scoreExistingCaliber(caliber: Caliber, answers: WizardAnswers) {
   if (answers.existingCaliberId === "nincs") {
     return { active: false, points: 0, reason: null };
@@ -215,6 +257,7 @@ export function scoreCalibers(answers: WizardAnswers) {
     const range = scoreRangeMatch(caliber, answers);
     const fegyvertipus = scoreFegyvertipus(caliber, answers);
     const vadaszatiMod = scoreVadaszatiMod(caliber, answers);
+    const alag = scoreAlag(caliber, answers);
     const existing = scoreExistingCaliber(caliber, answers);
     const popularity = scorePopularity(caliber);
 
@@ -223,6 +266,7 @@ export function scoreCalibers(answers: WizardAnswers) {
       range.points +
       fegyvertipus.points +
       vadaszatiMod.points +
+      alag.points +
       existing.points +
       popularity.points;
     const maxScore =
@@ -230,6 +274,7 @@ export function scoreCalibers(answers: WizardAnswers) {
       RANGE_WEIGHT +
       FEGYVERTIPUS_WEIGHT +
       VADASZATIMOD_WEIGHT +
+      (answers.subCategory ? ALAG_WEIGHT : 0) +
       (existing.active ? EXISTING_CALIBER_WEIGHT : 0) +
       POPULARITY_WEIGHT;
 
@@ -239,6 +284,7 @@ export function scoreCalibers(answers: WizardAnswers) {
       range.reason,
       fegyvertipus.reason,
       vadaszatiMod.reason,
+      alag.reason,
       popularity.reason,
     ].filter((r): r is string => Boolean(r));
 
@@ -294,19 +340,32 @@ export function generateRecommendations(answers: WizardAnswers): RecommendationR
 
   const preferred = answers.preferredManufacturers.filter((m) => m !== "nincs_preferencia");
   const hajtas = answers.vadaszatiMod === "hajtovadaszat_treles";
+  const alagAjanlas = answers.subCategory ? getAlagAjanlas(answers.subCategory) : undefined;
+  const preferHeavier = hajtas || alagAjanlas?.suly_irany === "nehezebb";
 
   const recommendations = selected.map((s) => {
     let ammoOptions = getEnrichedAmmoForCaliber(s.caliber.nev);
     if (answers.olommentesSzukseges) {
       ammoOptions = ammoOptions.filter((a) => a.olommentes);
     }
+
+    // ".308 Win bika-szabály": a hüvely korlátozott kapacitása miatt "erős"
+    // (nehezebb súlyirányú) al-ágban a könnyebb, <180 gr-os tételek nem
+    // ajánlhatók — ez csak a .308 Winchesterre vonatkozó, konkrét szabály,
+    // más kaliberekre (7x64, .30-06 stb.) a nagyobb hüvelykapacitás miatt
+    // nem kell hard-filternek lennie, csak a sorrendben előrébb kerülnek.
+    if (s.caliber.nev === ".308 Winchester" && alagAjanlas?.suly_irany === "nehezebb") {
+      ammoOptions = ammoOptions.filter((a) => extractMaxGrainWeight(a.tomeg) >= 180);
+    }
+
     ammoOptions = [...ammoOptions].sort((a, b) => {
       const aPreferred = preferred.includes(a.gyarto) ? 1 : 0;
       const bPreferred = preferred.includes(b.gyarto) ? 1 : 0;
       if (aPreferred !== bPreferred) return bPreferred - aPreferred;
-      // Hajtóvadászaton/terelésen a nehezebb lövedéktömeg-tartomány jellemzően
-      // megbízhatóbb átütést ad, ezért ilyenkor a nehezebb tételek kerülnek előre.
-      if (hajtas) return extractMaxGrainWeight(b.tomeg) - extractMaxGrainWeight(a.tomeg);
+      // Hajtóvadászaton/terelésen, illetve "erős" (bika/kan/kos) al-ágban a
+      // nehezebb lövedéktömeg-tartomány jellemzően megbízhatóbb átütést ad,
+      // ezért ilyenkor a nehezebb tételek kerülnek előre.
+      if (preferHeavier) return extractMaxGrainWeight(b.tomeg) - extractMaxGrainWeight(a.tomeg);
       return 0;
     });
     return { ...s, ammoOptions };
@@ -316,23 +375,39 @@ export function generateRecommendations(answers: WizardAnswers): RecommendationR
 }
 
 /** Legnagyobb grain-érték egy "tomeg" mezőből (pl. "150 gr / 180 gr" → 180). Nincs találat esetén 0. */
-function extractMaxGrainWeight(tomeg: string): number {
+export function extractMaxGrainWeight(tomeg: string): number {
   const matches = [...tomeg.matchAll(/(\d+(?:[.,]\d+)?)\s*gr/gi)];
   if (matches.length === 0) return 0;
   return Math.max(...matches.map((m) => parseFloat(m[1].replace(",", "."))));
 }
 
+/** Igaz, ha a ".308 Win bika-szabály" magyarázó szövegét meg kell jeleníteni ehhez a kaliberhez/al-ághoz. */
+export function shouldShow308WinBikaSzabaly(
+  caliberNev: string,
+  subCategory: WizardAnswers["subCategory"],
+): boolean {
+  if (caliberNev !== ".308 Winchester" || !subCategory) return false;
+  return getAlagAjanlas(subCategory)?.suly_irany === "nehezebb";
+}
+
 /**
  * Az eredményoldalon melyik lövedék-viselkedési kategóriát vezessük a
  * lőszerlistában. Alapesetben a felhasználó saját választása (`lovedekKategoria`).
- * Hajtóvadászat/terelés esetén viszont — kizárólag nagyvad fajoknál, NEM
- * ragadozó/dúvadnál, ahol a "gyors hatás" kategória a species-alapú logika
- * szerint is indokolt marad — a szakirodalmi ajánlás alapján a
- * "kiegyensúlyozott" (megbízható, kiszámítható átütés) kategóriát vezetjük,
- * függetlenül attól, melyiket választotta a felhasználó a korábbi lépésben.
+ *
+ * Két eset kényszeríti "kiegyensúlyozott"-ra, függetlenül a felhasználó saját
+ * választásától:
+ * 1. Hajtóvadászat/terelés — kizárólag nagyvad fajoknál, NEM ragadozó/
+ *    dúvadnál, ahol a "gyors hatás" kategória a species-alapú logika szerint
+ *    is indokolt marad.
+ * 2. "Erős" ivar/méret al-ág (bika/kan/kos) — a német szakirodalom szerint a
+ *    kifejlett hím egyedeknél a megbízható, kiszámítható átütés a döntő, nem
+ *    a gyors fragmentáció (data/alag_ajanlasok.json `kiegyensulyozott_kotelezo`).
  */
 export function resolvePreferredLovedekKategoria(answers: WizardAnswers): LovedekKategoriaId {
   if (answers.vadaszatiMod === "hajtovadaszat_treles" && answers.game !== "aprovad") {
+    return "kiegyensulyozott";
+  }
+  if (answers.subCategory && getAlagAjanlas(answers.subCategory)?.kiegyensulyozott_kotelezo) {
     return "kiegyensulyozott";
   }
   return answers.lovedekKategoria;
