@@ -2,13 +2,20 @@ import Link from "next/link";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import ResultCard from "@/components/ResultCard";
 import { getCaliberByNev, getLovedekKategoria } from "@/lib/data";
-import { generateRecommendations } from "@/lib/recommendation-engine";
-import { BUDGET_OPTIONS, FEGYVERTIPUS_OPTIONS, GAME_OPTIONS, RANGE_OPTIONS } from "@/lib/wizard-questions";
+import { generateRecommendations, resolvePreferredLovedekKategoria } from "@/lib/recommendation-engine";
+import {
+  BUDGET_OPTIONS,
+  FEGYVERTIPUS_OPTIONS,
+  GAME_OPTIONS,
+  RANGE_OPTIONS,
+  VADASZATI_MOD_OPTIONS,
+} from "@/lib/wizard-questions";
 import type {
   BudgetLevel,
   FegyverTipus,
   LovedekKategoriaId,
   RangeCategory,
+  VadaszatiMod,
   WizardAnswers,
 } from "@/lib/types";
 
@@ -26,11 +33,12 @@ function parseAnswers(sp: SearchParams): WizardAnswers | null {
   const fegyvertipus = get("fegyvertipus") as FegyverTipus | undefined;
   const lovedekKategoria = get("lovedekKategoria") as LovedekKategoriaId | undefined;
   const olommentesSzukseges = get("olommentesSzukseges") === "true";
+  const vadaszatiMod = get("vadaszatiMod") as VadaszatiMod | undefined;
   const budget = get("budget") as BudgetLevel | undefined;
   const existingCaliberId = get("existingCaliberId");
   const manufacturers = get("manufacturers") ?? "";
 
-  if (!game || !range || !fegyvertipus || !lovedekKategoria || !budget || !existingCaliberId) {
+  if (!game || !range || !fegyvertipus || !lovedekKategoria || !vadaszatiMod || !budget || !existingCaliberId) {
     return null;
   }
 
@@ -40,6 +48,7 @@ function parseAnswers(sp: SearchParams): WizardAnswers | null {
     fegyvertipus,
     lovedekKategoria,
     olommentesSzukseges,
+    vadaszatiMod,
     budget,
     existingCaliberId,
     preferredManufacturers: manufacturers.split(",").filter(Boolean),
@@ -78,6 +87,8 @@ export default async function ResultPage({
   const existingCaliber =
     answers.existingCaliberId !== "nincs" ? getCaliberByNev(answers.existingCaliberId) : undefined;
   const lovedekKategoria = getLovedekKategoria(answers.lovedekKategoria);
+  const preferredLovedekKategoria = resolvePreferredLovedekKategoria(answers);
+  const isHajtovadaszat = answers.vadaszatiMod === "hajtovadaszat_treles";
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
@@ -100,6 +111,9 @@ export default async function ResultPage({
         </span>
         <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
           Lövedék: {lovedekKategoria?.megjelenites ?? answers.lovedekKategoria}
+        </span>
+        <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
+          Vadászati mód: {findLabel(VADASZATI_MOD_OPTIONS, answers.vadaszatiMod)}
         </span>
         {answers.olommentesSzukseges && (
           <span className="rounded-full bg-forest-900/5 px-3 py-1.5 text-forest-900">
@@ -124,6 +138,13 @@ export default async function ResultPage({
         </p>
       )}
 
+      {isHajtovadaszat && (
+        <p className="mt-6 rounded-xl bg-forest-700/10 px-4 py-3 text-sm text-forest-900">
+          Hajtóvadászaton a gyorsaság, megbízhatóság és a nehezebb lövedékek jellemzően jobb
+          energiaátadása a döntő szempont, ezért ezt a kalibert/lőszertípust ajánljuk.
+        </p>
+      )}
+
       <div className="mt-8 space-y-6">
         {recommendations.map((rec, i) => (
           <ResultCard
@@ -131,7 +152,7 @@ export default async function ResultPage({
             recommendation={rec}
             rank={i + 1}
             game={answers.game}
-            preferredLovedekKategoria={answers.lovedekKategoria}
+            preferredLovedekKategoria={preferredLovedekKategoria}
           />
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { isRimmedCaliber } from "@/lib/ammo-classification";
 import { AMMO_SEED, CALIBERS, getEnrichedAmmoForCaliber } from "@/lib/data";
-import type { Caliber, Kategoria, RangeCategory, WizardAnswers } from "@/lib/types";
+import type { Caliber, EnrichedAmmo, Kategoria, LovedekKategoriaId, RangeCategory, WizardAnswers } from "@/lib/types";
 
 /**
  * Egyszerű, átlátható pontozó logika a kutatott kaliber-adatbázisra
@@ -139,18 +139,49 @@ function scoreFegyvertipus(caliber: Caliber, answers: WizardAnswers) {
     };
   }
 
-  // toroecsoeves_kombinalt
+  // billeno_csovu_kombinalt
   if (rimmed) {
     return {
       points: FEGYVERTIPUS_WEIGHT,
-      reason: "Törőcsöves/kombinált fegyverekhez jellemzően előnyben részesített, peremes (R) kaliberváltozat.",
+      reason: "Billenő csövű/kombinált fegyverekhez jellemzően előnyben részesített, peremes (R) kaliberváltozat.",
     };
   }
   return {
     points: FEGYVERTIPUS_WEIGHT * 0.6,
     reason:
-      "Ez rimless (nem peremes) kaliber — törőcsöves/kombinált fegyverbe jellemzően csak hüvelytoldatos/adapteres megoldással tölthető.",
+      "Ez rimless (nem peremes) kaliber — billenő csövű/kombinált fegyverbe jellemzően csak hüvelytoldatos/adapteres megoldással tölthető.",
   };
+}
+
+/**
+ * Hajtóvadászaton/terelésen a szakirodalom szerint a gyorsaság, megbízhatóság
+ * és a nagyobb megállítóerő a döntő szempont — ezek a kaliberek (és a velük
+ * azonos kategóriába eső "hasonló társak") kapnak ezért pluszpontot. Ez a mi
+ * saját, a kapott szakmai brief alapján rögzített listánk, nem a
+ * calibers.json kutatott adata.
+ */
+const HAJTAS_PRIORITY_CALIBERS = new Set([".308 Winchester", ".30-06 Springfield", "8x57 IS (JS)", "9,3x62"]);
+const HAJTAS_PRIORITY_KATEGORIAK: Kategoria[] = ["kozep_europai_klasszikus", "nagyvad_europai"];
+const VADASZATIMOD_WEIGHT = 1.5;
+
+function scoreVadaszatiMod(caliber: Caliber, answers: WizardAnswers) {
+  if (answers.vadaszatiMod === "cserkeles_lesvadaszat") {
+    return { points: VADASZATIMOD_WEIGHT, reason: null };
+  }
+  if (HAJTAS_PRIORITY_CALIBERS.has(caliber.nev)) {
+    return {
+      points: VADASZATIMOD_WEIGHT,
+      reason:
+        "Hajtóvadászaton/terelésen jellemzően ajánlott, mérsékelt visszarúgású, de kellően nagy energiájú kaliber.",
+    };
+  }
+  if (HAJTAS_PRIORITY_KATEGORIAK.includes(caliber.kategoria)) {
+    return {
+      points: VADASZATIMOD_WEIGHT * 0.6,
+      reason: "A hajtóvadászaton jellemzően ajánlott kaliberekhez hasonló kategóriájú, mérsékelt visszarúgású kaliber.",
+    };
+  }
+  return { points: 0, reason: null };
 }
 
 function scoreExistingCaliber(caliber: Caliber, answers: WizardAnswers) {
@@ -183,21 +214,33 @@ export function scoreCalibers(answers: WizardAnswers) {
     const kategoriaMatch = scoreKategoriaMatch(caliber, answers);
     const range = scoreRangeMatch(caliber, answers);
     const fegyvertipus = scoreFegyvertipus(caliber, answers);
+    const vadaszatiMod = scoreVadaszatiMod(caliber, answers);
     const existing = scoreExistingCaliber(caliber, answers);
     const popularity = scorePopularity(caliber);
 
     const score =
-      kategoriaMatch.points + range.points + fegyvertipus.points + existing.points + popularity.points;
+      kategoriaMatch.points +
+      range.points +
+      fegyvertipus.points +
+      vadaszatiMod.points +
+      existing.points +
+      popularity.points;
     const maxScore =
       KATEGORIA_WEIGHT +
       RANGE_WEIGHT +
       FEGYVERTIPUS_WEIGHT +
+      VADASZATIMOD_WEIGHT +
       (existing.active ? EXISTING_CALIBER_WEIGHT : 0) +
       POPULARITY_WEIGHT;
 
-    const reasons = [kategoriaMatch.reason, existing.reason, range.reason, fegyvertipus.reason, popularity.reason].filter(
-      (r): r is string => Boolean(r),
-    );
+    const reasons = [
+      kategoriaMatch.reason,
+      existing.reason,
+      range.reason,
+      fegyvertipus.reason,
+      vadaszatiMod.reason,
+      popularity.reason,
+    ].filter((r): r is string => Boolean(r));
 
     const isOwned = caliber.nev === answers.existingCaliberId;
     const speciesRelevant = relevantKategoriak(answers.game).includes(caliber.kategoria);
@@ -250,6 +293,7 @@ export function generateRecommendations(answers: WizardAnswers): RecommendationR
   selected = selected.slice(0, MAX_RECOMMENDATIONS);
 
   const preferred = answers.preferredManufacturers.filter((m) => m !== "nincs_preferencia");
+  const hajtas = answers.vadaszatiMod === "hajtovadaszat_treles";
 
   const recommendations = selected.map((s) => {
     let ammoOptions = getEnrichedAmmoForCaliber(s.caliber.nev);
@@ -259,12 +303,44 @@ export function generateRecommendations(answers: WizardAnswers): RecommendationR
     ammoOptions = [...ammoOptions].sort((a, b) => {
       const aPreferred = preferred.includes(a.gyarto) ? 1 : 0;
       const bPreferred = preferred.includes(b.gyarto) ? 1 : 0;
-      return bPreferred - aPreferred;
+      if (aPreferred !== bPreferred) return bPreferred - aPreferred;
+      // Hajtóvadászaton/terelésen a nehezebb lövedéktömeg-tartomány jellemzően
+      // megbízhatóbb átütést ad, ezért ilyenkor a nehezebb tételek kerülnek előre.
+      if (hajtas) return extractMaxGrainWeight(b.tomeg) - extractMaxGrainWeight(a.tomeg);
+      return 0;
     });
     return { ...s, ammoOptions };
   });
 
   return { recommendations, fallbackUsed };
+}
+
+/** Legnagyobb grain-érték egy "tomeg" mezőből (pl. "150 gr / 180 gr" → 180). Nincs találat esetén 0. */
+function extractMaxGrainWeight(tomeg: string): number {
+  const matches = [...tomeg.matchAll(/(\d+(?:[.,]\d+)?)\s*gr/gi)];
+  if (matches.length === 0) return 0;
+  return Math.max(...matches.map((m) => parseFloat(m[1].replace(",", "."))));
+}
+
+/**
+ * Az eredményoldalon melyik lövedék-viselkedési kategóriát vezessük a
+ * lőszerlistában. Alapesetben a felhasználó saját választása (`lovedekKategoria`).
+ * Hajtóvadászat/terelés esetén viszont — kizárólag nagyvad fajoknál, NEM
+ * ragadozó/dúvadnál, ahol a "gyors hatás" kategória a species-alapú logika
+ * szerint is indokolt marad — a szakirodalmi ajánlás alapján a
+ * "kiegyensúlyozott" (megbízható, kiszámítható átütés) kategóriát vezetjük,
+ * függetlenül attól, melyiket választotta a felhasználó a korábbi lépésben.
+ */
+export function resolvePreferredLovedekKategoria(answers: WizardAnswers): LovedekKategoriaId {
+  if (answers.vadaszatiMod === "hajtovadaszat_treles" && answers.game !== "aprovad") {
+    return "kiegyensulyozott";
+  }
+  return answers.lovedekKategoria;
+}
+
+/** Egy lőszer valóban "Driven Hunt"/hajtásra pozicionált termékvonal-e (névalapú detektálás). */
+export function isDrivenHuntProduct(ammo: EnrichedAmmo): boolean {
+  return /driven hunt/i.test(ammo.termeknev);
 }
 
 /** Csak diagnosztikához/tesztekhez: az összes gyártó, aminek van seed-adata. */

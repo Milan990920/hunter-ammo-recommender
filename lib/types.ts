@@ -7,7 +7,10 @@ export type RangeCategory = "kozeli" | "kozepes" | "nagy";
 export type BudgetLevel = "alacsony" | "kozepes" | "magas";
 
 /** Milyen fegyverrel vadászik — eldönti, hogy a peremes ("R") kaliberváltozatok élveznek-e előnyt. */
-export type FegyverTipus = "ismetlo" | "toroecsoeves_kombinalt" | "nyitott";
+export type FegyverTipus = "ismetlo" | "billeno_csovu_kombinalt" | "nyitott";
+
+/** Milyen vadászati módra keresi a lőszert. */
+export type VadaszatiMod = "cserkeles_lesvadaszat" | "hajtovadaszat_treles";
 
 /** A data/lovedek_kategoriak.json azonosítói. */
 export type LovedekKategoriaId = "kiegyensulyozott" | "gyors_hatas" | "melyathatolas_afrikai";
@@ -70,6 +73,8 @@ export interface AmmoSeedEntry {
   forras_megjegyzes: string;
   /** Ha true: nincs még valós, kaliber-specifikus termékadat ehhez a gyártóhoz. */
   TODO_ellenorzendo?: boolean;
+  /** Ha true: a kaliber ritkán elérhető ehhez a gyártóhoz Magyarországon. */
+  ritka_kaliber?: boolean;
 }
 
 /**
@@ -88,6 +93,7 @@ export interface WizardAnswers {
   fegyvertipus: FegyverTipus;
   lovedekKategoria: LovedekKategoriaId;
   olommentesSzukseges: boolean;
+  vadaszatiMod: VadaszatiMod;
   budget: BudgetLevel;
   /** Egy Caliber.nev érték, vagy "nincs" ha nincs még fegyvere. */
   existingCaliberId: string;

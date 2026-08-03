@@ -14,6 +14,7 @@ import {
   MANUFACTURER_OPTIONS,
   NO_MANUFACTURER_PREFERENCE,
   RANGE_OPTIONS,
+  VADASZATI_MOD_OPTIONS,
   WIZARD_STEP_TITLES,
 } from "@/lib/wizard-questions";
 import type {
@@ -22,6 +23,7 @@ import type {
   Kategoria,
   LovedekKategoriaId,
   RangeCategory,
+  VadaszatiMod,
   WizardAnswers,
 } from "@/lib/types";
 
@@ -73,10 +75,12 @@ export default function WizardPage() {
       case 3:
         return Boolean(answers.lovedekKategoria);
       case 4:
-        return Boolean(answers.budget);
+        return Boolean(answers.vadaszatiMod);
       case 5:
-        return Boolean(answers.existingCaliberId);
+        return Boolean(answers.budget);
       case 6:
+        return Boolean(answers.existingCaliberId);
+      case 7:
         return true;
       default:
         return false;
@@ -95,6 +99,7 @@ export default function WizardPage() {
       fegyvertipus: finalAnswers.fegyvertipus,
       lovedekKategoria: finalAnswers.lovedekKategoria,
       olommentesSzukseges: String(Boolean(finalAnswers.olommentesSzukseges)),
+      vadaszatiMod: finalAnswers.vadaszatiMod,
       budget: finalAnswers.budget,
       existingCaliberId: finalAnswers.existingCaliberId,
       manufacturers: finalAnswers.preferredManufacturers.join(","),
@@ -227,6 +232,22 @@ export default function WizardPage() {
         )}
 
         {step === 4 && (
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            {VADASZATI_MOD_OPTIONS.map((opt) => (
+              <OptionCard
+                key={opt.id}
+                label={opt.label}
+                hint={opt.hint}
+                selected={answers.vadaszatiMod === opt.id}
+                onClick={() =>
+                  setAnswers((prev) => ({ ...prev, vadaszatiMod: opt.id as VadaszatiMod }))
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {BUDGET_OPTIONS.map((opt) => (
               <OptionCard
@@ -242,7 +263,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="space-y-4">
             <OptionCard
               label="Még nincs fegyverem"
@@ -282,7 +303,7 @@ export default function WizardPage() {
           </div>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <div>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {MANUFACTURER_OPTIONS.map((name) => (
