@@ -3,7 +3,7 @@
 Ingyenes, magyar nyelvű webalkalmazás vadászoknak: egy rövid, irányított
 kérdőív (wizard) alapján ajánl kaliber- és lőszerkombinációkat, indoklással.
 
-> **Ez egy MVP, kutatott (v4) adatbázissal.** A kaliberlista és a
+> **Ez egy MVP, kutatott (v5) adatbázissal.** A kaliberlista és a
 > gyártói kereszthivatkozás valós kutatáson alapul, de a torkolatienergia-
 > tartományok **becsültek**, és a gyártói termékpélda-adatbázis szándékosan
 > **nem teljes lefedettségű**. Lásd az "Adatellenőrzési TODO" szakaszt éles
@@ -25,9 +25,11 @@ lehet megfelelő"), nem kategorikus ("ez a legjobb") — ez szándékos, lásd a
 
 - **Landing oldal** (`/`) — az öt magyar nagyvadfaj (gímszarvas, dámszarvas,
   őz, muflon, vaddisznó) saját, kézzel rajzolt jelvény-ikonjaival.
-- **Kérdőív** (`/wizard`) — 8, egymástól valóban független lépés: vadfaj,
-  lőtávolság/terep, fegyvertípus (ismétlő / billenő csövű-kombinált / még
-  nincs), lövedék-viselkedési cél (+ólommentes szűrő), vadászati mód
+- **Kérdőív** (`/wizard`) — 8 vagy 9, egymástól valóban független lépés
+  (a lépésszám dinamikus): vadfaj, **ivar/méret al-ág (feltételes lépés,
+  csak vaddisznó/gímszarvas/dámszarvas/muflon esetén)**, lőtávolság/terep,
+  fegyvertípus (ismétlő / billenő csövű-kombinált / még nincs),
+  lövedék-viselkedési cél (+ólommentes szűrő), vadászati mód
   (cserkelés-lesvadászat / hajtóvadászat-terelés), költségkeret, meglévő
   kaliber (52 kaliber, kategóriánként csoportosítva), gyártói preferencia
   (14 márka).
@@ -77,12 +79,17 @@ megerősítésből származik-e az adat), opcionális `TODO_ellenorzendo: true`,
 opcionális `ritka_kaliber: true` (ha az adott kaliber ritkán elérhető az
 adott gyártótól Magyarországon).
 
-**Ez szándékosan nem teljes lefedettségű minta** (59 sourced tétel + 4
+**Ez szándékosan nem teljes lefedettségű minta** (62 sourced tétel + 4
 TODO-jelölt gyártó: Federal, Remington, Fiocchi, Blaser — ezekhez a kutatás
 nem talált hazai, kaliber-specifikus adatot, ezért nem generáltunk fiktív
 terméket hozzájuk). A 14. gyártó a **PPU (Prvi Partizan)**, szerb gyártó,
 kifejezetten "value tier" (érték-kategóriás) pozicionálással, széles
 kaliberkínálattal.
+
+Néhány tétel opcionális `alagak` mezővel is rendelkezik (lásd lent, "Ivar/
+méret al-ágak"), és a legteljesebben hivatalos gyártói adattal ellenőrzött
+sornál (Norma Bondstrike, .308 Win) opcionális `sebesseg_ms`/`energia_j`/
+`ballisztikai_egyutthato`/`lovedek_tipus` mező is szerepel.
 
 **Korrekció:** a korábbi "Sako Arrowhead II" hivatkozás törölve — ez a
 termékvonal nincs a Sako jelenlegi hivatalos kínálatában (sako.global).
@@ -93,6 +100,49 @@ gyártott 6,5x55 SE/.308 Win/.30-06/.300 Win Mag/9,3x62/9,3x74R kaliberekben)
 is bekerült — korábban csak a Lapua Naturalis szerepelt, a Mega tévedésből
 kimaradt.
 
+### `data/vadfaj_kategoriak.json` + `data/alag_ajanlasok.json` — ivar/méret al-ágak
+
+**Szakirodalmi alap:** a német vadászati szakirodalom és vadászvizsga-
+felkészítő anyagok következetesen megkülönböztetik a nagytestű szarvasféléknél
+(gímszarvas, dámszarvas, muflon) és a vaddisznónál a "gyenge" (nőivarú/
+fiatal, németül "Kahlwild" — agancstalan vad, mert csak a hím fejleszt
+agancsot) és "erős" (kifejlett hím) egyedeket, eltérő kaliber-/
+lövedéktömeg-ajánlással. **A hivatalos német minimumkövetelmény
+(Bundesjagdgesetz: őzre 1000 J/100m, más patásvadra min. 6,5mm + 2000 J/100m)
+ez a projekt sehol nem állítja magyar jogszabályi tényként — kizárólag
+kódkommentben szerepel összehasonlítási referenciaként** (lásd
+`lib/recommendation-engine.ts` fájl eleji kommentje). A magyar minimumokat
+ettől függetlenül kell ellenőrizni, mielőtt bármi jogszabályi tényként
+szerepelne az oldalon.
+
+`data/vadfaj_kategoriak.json` a vadfaj-választó teljes, kapott struktúráját
+tartalmazza, `implementalva: false` jelöléssel az öt olyan tételnél
+(hajtóvadászat, billenő csövű hagyományos, külföldi nagytestű, afrikai
+nagyvad, ritka gyűjtői, vadkárelhárítás), amit **nem kötöttünk be** új,
+önálló fajválasztó opcióként — mert vagy már létező, külön wizard-kérdéssel
+redundánsak (hajtóvadászat, billenő csövű, ólommentes), vagy nincs hozzá
+faj-/kaliber-adat a rendszerben (jávorszarvas, bölény, medve), vagy nincs
+egyértelmű szűrési logika specifikálva hozzájuk. Ez a döntés minden egyes
+tételnél megjegyzésben dokumentálva van a JSON-ban.
+
+`data/alag_ajanlasok.json` a ténylegesen bekötött 8 al-ághoz (vaddiszno_fiatal/
+_kan, gimszarvas_tehen/_bika, damszarvas_suta/_bika, muflon_juh/_kos) tartalmaz
+ajánlott kaliberlistát, súlyirányt (`konnyebb`/`nehezebb`) és egy
+`kiegyensulyozott_kotelezo` jelzőt (bika/kan/kos ágaknál igaz — ilyenkor a
+"gyors hatás" lövedék-kategória nem vezető bucket, még akkor sem, ha a
+felhasználó azt választotta a lövedék-viselkedés kérdésnél).
+A dámszarvas/muflon ágak a gímszarvas mintáját követik, de könnyebbre tolva
+(pl. .243 Win/.25-06 bekerül a suta/juh ágba, ami a gímszarvas tehén-ágból
+hiányzik — a dám és a muflon könnyebb testfelépítése miatt).
+
+**".308 Win bika-szabály"** (`shouldShow308WinBikaSzabaly()`): mivel a .308
+Win hüvelykapacitása korlátozott, "erős" (nehezebb súlyirányú) al-ágban a
+könnyebb, 180 grain alatti termékek ki vannak zárva a listából, és egy
+magyarázó szöveg jelenik meg a kártyán. Ez KIZÁRÓLAG a .308 Winre vonatkozó,
+kemény szabály — más kalibereknél (7x64, .30-06 stb.) a nagyobb
+hüvelykapacitás miatt csak a nehezebb tételek kerülnek előrébb a sorrendben,
+nincs kizárás.
+
 ### `lib/ammo-classification.ts` — lövedék-viselkedés/ólommentesség/ár-sáv besorolás
 
 A seed sorok nem tartalmaznak lövedék-viselkedés, ólommentesség vagy ár-sáv
@@ -101,7 +151,7 @@ termékvonalaival kereszthivatkozott besorolásunk (kulcs: `gyártó|termeknév`
 — **nem egyedileg forrásolt**, hanem iparági termékpozicionálás alapján
 készült szakmai hozzárendelés (pl. a GECO és a PPU (Prvi Partizan) márka
 egésze "value tier", a lead-free/bonded és a Sako Hammerhead/Super
-Hammerhead/Twinhead II vonalak "prémium"). 63 sorból 59-hez van besorolás (a
+Hammerhead/Twinhead II vonalak "prémium"). 66 sorból 62-höz van besorolás (a
 4 TODO-jelölt, terméknév nélküli sor kimarad). Ezt is érdemes egyedi
 forrásokkal (gyártói katalógus-pozicionálás) megerősíteni éles indulás előtt.
 
@@ -173,8 +223,11 @@ nem kellett módosítani.
    adapteres megoldással tölthető").
 4. **Vadászati mód** — hajtóvadászat/terelés esetén a mérsékelt visszarúgású,
    de kellően nagy energiájú kaliberek (lásd lent) kapnak pluszpontot.
-5. **Meglévő kaliber** — ha van, erős pluszpontot kap.
-6. **Elterjedtség Magyarországon** (`elterjedtseg_hu`) — enyhe súlyozás itt is.
+5. **Ivar/méret al-ág** — ha releváns (vaddiszno/gímszarvas/dámszarvas/
+   muflon), az al-ág `ajanlott_kaliberek` listáján szereplő kaliberek
+   pluszpontot kapnak (lásd "Ivar/méret al-ágak" fent).
+6. **Meglévő kaliber** — ha van, erős pluszpontot kap.
+7. **Elterjedtség Magyarországon** (`elterjedtseg_hu`) — enyhe súlyozás itt is.
 
 **2) Rendezés és vágás:** a küszöböt elérő kaliberek közül a végső sorrendet
 kizárólag az `elterjedtseg_hu` (csökkenő) adja — a meglévő kaliber mindig
@@ -291,6 +344,8 @@ npm run build
   calibers.json                    → 52 kaliber, kutatott adatok
   manufacturer_products_seed.json  → 14 gyártó kereszthivatkozása (seed)
   lovedek_kategoriak.json          → 3 lövedék-viselkedési kategória
+  vadfaj_kategoriak.json           → vadfaj-választó struktúra + ivar/méret al-ágak
+  alag_ajanlasok.json              → al-ágankénti kaliber-/lövedéktömeg-ajánlás
 /lib
   types.ts
   data.ts                 → betöltés + kaliber-név feloldás (aliasok)
@@ -306,6 +361,9 @@ npm run build
 
 ## Amit szándékosan NEM tartalmaz ez a verzió
 
+- Nincs önálló "Prémium/bérvadászati trófea-vadászat" vadfaj-kategória — ez
+  szándékosan összeolvadt a bika/kan/kos al-ágakkal (nehezebb, kifejezetten
+  kiegyensúlyozott lövedékajánlás) és a már meglévő költségkeret-szűrővel.
 - Nincs AI/ML ajánlórendszer — egyszerű, átlátható, könnyen módosítható
   szabályalapú pontozás.
 - Nincs fizetős/affiliate link. Ha a jövőben bármely gyártóval kereskedelmi
