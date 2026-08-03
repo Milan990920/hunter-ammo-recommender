@@ -10,6 +10,8 @@ import type { AmmoSeedEntry, ArSav, EnrichedAmmo, LovedekKategoriaId } from "@/l
 const CLASSIFICATION: Record<string, { lovedekKategoria: LovedekKategoriaId; olommentes: boolean; arSav: ArSav }> = {
   "Hornady|Precision Hunter ELD-X": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
   "Norma|Whitetail": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "ertek" },
+  "Norma|Bondstrike": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
+  "Norma|Oryx": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
   "GECO|Express / Plus / TM-SP": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "ertek" },
   "GECO|TM-SP / Plus": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "ertek" },
   "GECO|TM-SP": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "ertek" },
@@ -26,6 +28,7 @@ const CLASSIFICATION: Record<string, { lovedekKategoria: LovedekKategoriaId; olo
   "Lapua|Mega": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
   "RWS|KS": { lovedekKategoria: "gyors_hatas", olommentes: false, arSav: "ertek" },
   "RWS|Driven Hunt": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
+  "RWS|DK": { lovedekKategoria: "kiegyensulyozott", olommentes: false, arSav: "premium" },
   "Sellier & Bellot|SP": { lovedekKategoria: "gyors_hatas", olommentes: false, arSav: "ertek" },
   "SAX|KJG": { lovedekKategoria: "kiegyensulyozott", olommentes: true, arSav: "premium" },
   "SAX|KJG-HSR": { lovedekKategoria: "kiegyensulyozott", olommentes: true, arSav: "premium" },
